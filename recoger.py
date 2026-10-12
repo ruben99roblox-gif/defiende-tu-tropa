@@ -33,17 +33,43 @@ for _ in range(5):
     if not cursor:
         break
 
+grupo = None
+creador = g.get("creator") or {}
+if creador.get("type") == "Group":
+    try:
+        grupo = get(f"https://groups.roblox.com/v1/groups/{creador['id']}")
+    except Exception:
+        grupo = None
+
+# imagenes de la pagina del juego (se piden pocas veces: se reutilizan si ya estan)
+imagenes = datos.get("imagenes") or []
+if not imagenes or len(filas) % 72 == 0:
+    try:
+        ids = [m["imageId"] for m in get(f"https://games.roblox.com/v2/games/{UNIVERSO}/media")["data"] if m.get("imageId")]
+        if ids:
+            th = get("https://thumbnails.roblox.com/v1/assets?assetIds=" + ",".join(map(str, ids[:10]))
+                     + "&returnPolicy=PlaceHolder&size=768x432&format=Png")["data"]
+            imagenes = [x["imageUrl"] for x in th if x.get("imageUrl")]
+    except Exception:
+        pass
+
 ahora = int(time.time())
-filas.append({"t": ahora, "playing": g["playing"], "visits": g["visits"], "fav": g["favoritedCount"],
-              "up": v["upVotes"], "down": v["downVotes"]})
+fila = {"t": ahora, "playing": g["playing"], "visits": g["visits"], "fav": g["favoritedCount"],
+        "up": v["upVotes"], "down": v["downVotes"]}
+if grupo:
+    fila["grp"] = grupo.get("memberCount")
+filas.append(fila)
 filas = [f for f in filas if f["t"] >= ahora - GUARDAR]
 
 datos = {
     "filas": filas,
     "servidores": servidores,
     "serversT": ahora,
-    "juego": {"name": g["name"], "placeId": g["rootPlaceId"], "created": g.get("created"),
-              "updated": g.get("updated"), "maxPlayers": g.get("maxPlayers")},
+    "imagenes": imagenes,
+    "grupo": {"name": grupo.get("name"), "members": grupo.get("memberCount"), "id": grupo.get("id")} if grupo else None,
+    "juego": {k: g.get(k) for k in ("name", "rootPlaceId", "description", "created", "updated", "maxPlayers",
+                                     "genre_l1", "universeAvatarType", "createVipServersAllowed", "copyingAllowed",
+                                     "price", "isContentRestricted", "canonicalUrlPath")},
 }
 json.dump(datos, open(ruta, "w", encoding="utf-8"), separators=(",", ":"))
 print(f"ok: {len(filas)} lecturas, {g['playing']} jugando, {len(servidores)} servidores")
