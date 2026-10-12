@@ -1,0 +1,15 @@
+{
+  "name": "Defiende tu tropa! Stats",
+  "short_name": "DTT Stats",
+  "description": "Stats en directo de Defiende tu tropa!",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#07090d",
+  "theme_color": "#07090d",
+  "icons": [
+    {"src": "icono-192.png", "sizes": "256x256", "type": "image/png", "purpose": "any"},
+    {"src": "icono-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable"}
+  ]
+}

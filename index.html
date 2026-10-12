@@ -7,7 +7,11 @@
 <meta name="theme-color" content="#07090d">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="DTT Stats">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icono-192.png">
+<link rel="apple-touch-icon" href="icono-192.png">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500&display=swap">
 <style>
 /* Minimalista y futurista: casi negro, tarjetas lisas, un solo acento cian, cifras en
@@ -15,56 +19,54 @@
 :root {
   --bg: #07090d; --card: #0e131b; --card2: #131a24; --linea: #1c2431;
   --fg: #e8eef7; --sub: #8591a3; --tenue: #4e5a6c;
-  --acento: #5ee6ff; --acento-s: rgba(94,230,255,.12);
+  --acento: #5ee6ff; --acento-s: rgba(94,230,255,.12); --acento-m: rgba(94,230,255,.4);
   --bien: #5effa8; --mal: #ff6b7d; --aviso: #ffd166;
+  --sombra: rgba(0,0,0,.4); --brillo: 1;
   --display: "Chakra Petch", "Segoe UI", sans-serif;
   --mono: "IBM Plex Mono", ui-monospace, Consolas, monospace;
   --texto: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
   --r: 16px;
   color-scheme: dark;
 }
+:root[data-theme="light"] {
+  --bg: #f3f6fa; --card: #ffffff; --card2: #eef2f7; --linea: #dfe5ee;
+  --fg: #0d1520; --sub: #5a6676; --tenue: #94a0b0;
+  --acento: #0a8fb3; --acento-s: rgba(10,143,179,.1); --acento-m: rgba(10,143,179,.4);
+  --bien: #12a35a; --mal: #d93a50; --aviso: #c98a00; --sombra: rgba(20,30,50,.15); --brillo: 0;
+  color-scheme: light;
+}
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent }
 html { background: var(--bg) }
 body {
   margin: 0; min-height: 100vh; color: var(--fg); font: 400 14px/1.45 var(--texto);
   padding: 0 16px calc(96px + env(safe-area-inset-bottom, 0px));
-  background: radial-gradient(800px 380px at 50% -140px, rgba(94,230,255,.13), transparent 70%), var(--bg);
-  background-attachment: fixed;
+  background: radial-gradient(800px 380px at 50% -140px, var(--acento-s), transparent 70%), var(--bg);
+  background-attachment: fixed; overscroll-behavior-y: contain;
 }
-button { font: inherit; color: inherit }
+button, input, select, textarea { font: inherit; color: inherit }
+a { color: var(--acento) }
 .app { max-width: 920px; margin: 0 auto }
 
-.top {
-  position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5;
-  display: flex; align-items: center; gap: 12px; padding: 14px 0;
-  background: linear-gradient(var(--bg) 70%, transparent);
-}
-.top img { width: 40px; height: 40px; border-radius: 11px; object-fit: cover; background: var(--card) }
+.top { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; display: flex; align-items: center; gap: 10px; padding: 14px 0; background: linear-gradient(var(--bg) 70%, transparent) }
+.top img { width: 40px; height: 40px; border-radius: 11px; object-fit: cover; background: var(--card); flex: none }
 .top .tt { flex: 1; min-width: 0 }
 .top h1 { margin: 0; font: 600 17px var(--display); letter-spacing: .02em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis }
-.top small { display: flex; align-items: center; gap: 6px; color: var(--sub); font: 400 11px var(--mono) }
+.top small { display: flex; align-items: center; gap: 6px; color: var(--sub); font: 400 11px var(--mono); white-space: nowrap; overflow: hidden }
 .led { width: 7px; height: 7px; border-radius: 50%; background: var(--tenue); flex: none }
 .led.on { background: var(--bien); box-shadow: 0 0 8px var(--bien); animation: pulso 2s infinite }
 .led.off { background: var(--mal) }
 @keyframes pulso { 50% { opacity: .35 } }
-.icono-btn { width: 40px; height: 40px; border-radius: 12px; border: 1px solid var(--linea); background: var(--card); display: grid; place-items: center; cursor: pointer; position: relative; flex: none }
+.icono-btn { width: 40px; height: 40px; border-radius: 12px; border: 1px solid var(--linea); background: var(--card); display: grid; place-items: center; cursor: pointer; position: relative; flex: none; padding: 0 }
 .icono-btn:active { transform: scale(.94) }
 .icono-btn > svg:last-child { width: 18px; height: 18px }
 .anillo { position: absolute; inset: -1px; width: calc(100% + 2px); height: calc(100% + 2px); pointer-events: none }
 .anillo circle { fill: none; stroke: var(--acento); stroke-width: 1.6; stroke-linecap: round; transform: rotate(-90deg); transform-origin: center; transition: stroke-dashoffset 1s linear; opacity: .7 }
 
-.menu {
-  position: fixed; left: 0; right: 0; bottom: 0; z-index: 10;
-  display: flex; justify-content: center; gap: 2px;
-  padding: 8px 8px calc(8px + env(safe-area-inset-bottom, 0px));
-  background: rgba(10,13,19,.9); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
-  border-top: 1px solid var(--linea);
-}
-.menu button {
-  flex: 1; max-width: 110px; border: 0; background: none; cursor: pointer; padding: 6px 2px;
-  display: grid; justify-items: center; gap: 3px; color: var(--tenue); font: 500 10px var(--mono); letter-spacing: .02em;
-  border-radius: 12px; transition: color .2s, background .2s;
-}
+.tirar { height: 0; overflow: hidden; display: grid; place-items: center; color: var(--sub); font: 500 11px var(--mono); transition: height .2s }
+.tirar svg { width: 18px; height: 18px; transition: transform .2s }
+
+.menu { position: fixed; left: 0; right: 0; bottom: 0; z-index: 10; display: flex; justify-content: center; gap: 2px; padding: 8px 8px calc(8px + env(safe-area-inset-bottom, 0px)); background: color-mix(in srgb, var(--bg) 90%, transparent); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); border-top: 1px solid var(--linea) }
+.menu button { flex: 1; max-width: 110px; border: 0; background: none; cursor: pointer; padding: 6px 2px; display: grid; justify-items: center; gap: 3px; color: var(--tenue); font: 500 10px var(--mono); border-radius: 12px; transition: color .2s, background .2s }
 .menu button svg { width: 21px; height: 21px; transition: transform .25s }
 .menu button[aria-current="page"] { color: var(--acento); background: var(--acento-s) }
 .menu button[aria-current="page"] svg { transform: translateY(-2px) }
@@ -72,53 +74,75 @@ button { font: inherit; color: inherit }
 
 .vista { display: none; gap: 12px }
 .vista.activa { display: grid; animation: entra .35s cubic-bezier(.2,.8,.2,1) }
+.vista.desde-izq { animation-name: entraIzq } .vista.desde-der { animation-name: entraDer }
 @keyframes entra { from { opacity: 0; transform: translateY(10px) } }
+@keyframes entraIzq { from { opacity: 0; transform: translateX(-24px) } }
+@keyframes entraDer { from { opacity: 0; transform: translateX(24px) } }
 .titulo { margin: 4px 0 2px; font: 600 22px var(--display) }
+.seccion { margin: 10px 0 0; font: 500 11px var(--mono); letter-spacing: .14em; text-transform: uppercase; color: var(--tenue) }
 .card { background: var(--card); border: 1px solid var(--linea); border-radius: var(--r); padding: 16px; min-width: 0; position: relative; overflow: hidden }
 .etq { font: 500 11px var(--mono); letter-spacing: .12em; text-transform: uppercase; color: var(--sub) }
 .num { font: 500 30px/1.15 var(--mono); font-variant-numeric: tabular-nums; letter-spacing: -.02em; display: inline-block; border-radius: 6px; transition: color .6s }
 .num.sube { color: var(--bien) } .num.baja { color: var(--mal) }
 .grande { font-size: clamp(44px, 12vw, 64px) }
 .sub { color: var(--sub); font-size: 12px; margin-top: 4px }
-.vs { font: 500 12px var(--mono) }
-.vs.sube { color: var(--bien) } .vs.baja { color: var(--mal) }
+.vs { font: 500 12px var(--mono) } .vs.sube { color: var(--bien) } .vs.baja { color: var(--mal) }
 .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px }
 .grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px }
 .fila { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap }
-
-.cargando .num, .cargando .medalla { color: transparent; background: linear-gradient(90deg, var(--card2) 0, #1d2633 50%, var(--card2) 100%); background-size: 200% 100%; animation: brillo 1.2s infinite; min-width: 70px }
+.cargando .num, .cargando .medalla { color: transparent; background: linear-gradient(90deg, var(--card2) 0, var(--linea) 50%, var(--card2) 100%); background-size: 200% 100%; animation: brillo 1.2s infinite; min-width: 70px }
 @keyframes brillo { to { background-position: -200% 0 } }
 
-.hero { padding: 22px 18px; background: linear-gradient(160deg, #0f1a26, var(--card) 60%) }
+.hero { padding: 22px 18px; background: linear-gradient(160deg, color-mix(in srgb, var(--acento) 9%, var(--card)), var(--card) 60%) }
 .hero::after { content: ""; position: absolute; right: -60px; top: -60px; width: 180px; height: 180px; border-radius: 50%; background: radial-gradient(var(--acento-s), transparent 70%); animation: flota 6s ease-in-out infinite; pointer-events: none }
 @keyframes flota { 50% { transform: translate(-14px, 10px) } }
-.hero .chips { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px }
-.chip { font: 500 12px var(--mono); padding: 5px 10px; border-radius: 999px; background: var(--card2); border: 1px solid var(--linea) }
+.chips { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px }
+.chip { font: 500 12px var(--mono); padding: 5px 10px; border-radius: 999px; background: var(--card2); border: 1px solid var(--linea); white-space: nowrap }
 .chip b { color: var(--acento); font-weight: 500 }
+.frase { font-size: 15px; line-height: 1.5 } .frase b { color: var(--acento); font-weight: 500 }
+.estado-pill { display: inline-flex; align-items: center; gap: 6px; font: 500 12px var(--mono); padding: 4px 10px; border-radius: 99px; background: var(--card2) }
+.estado-pill.sube { color: var(--bien) } .estado-pill.baja { color: var(--mal) } .estado-pill.igual { color: var(--sub) }
 
 .barra { height: 8px; border-radius: 99px; background: var(--card2); overflow: hidden }
-.barra > i { display: block; height: 100%; width: 0; border-radius: 99px; background: linear-gradient(90deg, #2bb8d9, var(--acento)); box-shadow: 0 0 12px rgba(94,230,255,.5); transition: width 1.2s cubic-bezier(.2,.8,.2,1) }
+.barra > i { display: block; height: 100%; width: 0; border-radius: 99px; background: linear-gradient(90deg, color-mix(in srgb, var(--acento) 70%, #000), var(--acento)); box-shadow: 0 0 12px var(--acento-m); transition: width 1.2s cubic-bezier(.2,.8,.2,1) }
+.barra.ok > i { background: var(--bien); box-shadow: none }
 .likes { display: flex; height: 10px; border-radius: 99px; overflow: hidden; background: var(--mal); margin: 10px 0 6px }
 .likes i { background: var(--bien); transition: width 1.2s cubic-bezier(.2,.8,.2,1); width: 0 }
 
-.tabs { display: flex; background: var(--card2); border-radius: 10px; padding: 3px }
+.tabs { display: flex; background: var(--card2); border-radius: 10px; padding: 3px; flex-wrap: wrap }
 .tabs button { border: 0; background: none; color: var(--sub); font: 500 11px var(--mono); padding: 6px 9px; border-radius: 8px; cursor: pointer; transition: background .2s, color .2s }
 .tabs button[aria-pressed="true"] { background: var(--acento); color: var(--bg) }
+.conm { display: flex; gap: 14px; flex-wrap: wrap; margin-top: 10px; font: 400 12px var(--mono); color: var(--sub) }
+.conm label { display: flex; gap: 6px; align-items: center; cursor: pointer }
+.conm input { accent-color: var(--acento) }
+.leyenda { display: flex; gap: 14px; margin-top: 8px; font: 400 11px var(--mono); color: var(--sub); flex-wrap: wrap }
+.leyenda i { display: inline-block; width: 14px; height: 3px; border-radius: 3px; vertical-align: middle; margin-right: 5px }
 .lienzo { position: relative; margin-top: 12px }
 canvas { width: 100%; height: 210px; display: block; touch-action: pan-y }
-.tip { position: absolute; top: 0; left: 0; pointer-events: none; transform: translate(-50%, -110%); background: var(--fg); color: var(--bg); font: 500 11px var(--mono); padding: 4px 8px; border-radius: 8px; white-space: nowrap; opacity: 0; transition: opacity .15s }
+canvas.bajo { height: 150px }
+.tip { position: absolute; top: 0; left: 0; pointer-events: none; transform: translate(-50%, -110%); background: var(--fg); color: var(--bg); font: 500 11px var(--mono); padding: 4px 8px; border-radius: 8px; white-space: nowrap; opacity: 0; transition: opacity .15s; z-index: 2 }
 
 .calor { display: grid; grid-template-columns: repeat(12, 1fr); gap: 4px; margin-top: 12px }
-.calor div { aspect-ratio: 1; border-radius: 6px; background: var(--card2); display: grid; place-items: center; font: 400 9px var(--mono); color: var(--tenue); max-width: 100%; transition: background .6s }
+.calor div { aspect-ratio: 1; border-radius: 6px; background: var(--card2); display: grid; place-items: center; font: 400 9px var(--mono); color: var(--tenue); transition: background .6s }
+.semana { display: grid; grid-template-columns: 26px repeat(24, 1fr); gap: 2px; margin-top: 12px; font: 400 9px var(--mono); color: var(--tenue) }
+.semana div { aspect-ratio: 1; border-radius: 3px; background: var(--card2) }
+.semana span { align-self: center }
+.calendario { display: grid; grid-template-columns: repeat(10, 1fr); gap: 4px; margin-top: 12px }
+.calendario div { aspect-ratio: 1; border-radius: 5px; background: var(--card2); position: relative }
+.calendario div.hoy { outline: 1px solid var(--acento) }
 
 .lista { display: grid }
-.item { display: flex; justify-content: space-between; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--linea); min-width: 0 }
+.item { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--linea); min-width: 0 }
 .item:last-child { border-bottom: 0 }
-.item span { color: var(--sub) }
-.item b { font: 500 13px var(--mono); text-align: right }
-.srv { display: grid; grid-template-columns: 1fr 44px 100px; gap: 10px; align-items: center; font: 400 12px var(--mono); color: var(--sub); padding: 7px 0; white-space: nowrap }
+.item > span:first-child { color: var(--sub); min-width: 0; overflow: hidden; text-overflow: ellipsis }
+.item b { font: 500 13px var(--mono); text-align: right; white-space: nowrap }
+.item.tuyo > span:first-child { color: var(--acento) }
+.srv { display: grid; grid-template-columns: 1fr 40px 92px 64px; gap: 10px; align-items: center; font: 400 12px var(--mono); color: var(--sub); padding: 7px 0; white-space: nowrap }
 .srv .barra { height: 6px }
 .srv.lleno .barra > i { background: var(--mal); box-shadow: none }
+.srv .malo { color: var(--mal) }
+.unirse { border: 1px solid var(--acento); color: var(--acento); background: none; border-radius: 8px; padding: 4px 0; font: 500 11px var(--mono); cursor: pointer; text-align: center; text-decoration: none }
+.unirse:active { background: var(--acento-s) }
 table { width: 100%; border-collapse: collapse; font: 400 13px var(--mono); font-variant-numeric: tabular-nums }
 th, td { padding: 9px 4px; text-align: right; border-bottom: 1px solid var(--linea); white-space: nowrap }
 th:first-child, td:first-child { text-align: left }
@@ -127,17 +151,28 @@ th { font-weight: 500; font-size: 10px; letter-spacing: .12em; text-transform: u
 .desc { white-space: pre-line; color: var(--sub); font-size: 13px; margin: 10px 0 0 }
 .galeria { display: flex; gap: 10px; overflow-x: auto; scroll-snap-type: x mandatory; padding-bottom: 4px }
 .galeria img { width: 78%; max-width: 420px; aspect-ratio: 16/9; object-fit: cover; border-radius: 12px; scroll-snap-align: start; flex: none; background: var(--card2) }
+.tienda { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; margin-top: 12px }
+.prod { background: var(--card2); border-radius: 12px; padding: 10px; display: grid; gap: 6px; min-width: 0 }
+.prod img { width: 100%; aspect-ratio: 1; border-radius: 8px; object-fit: cover; background: var(--linea) }
+.prod b { font: 500 12px var(--texto); overflow: hidden; text-overflow: ellipsis; white-space: nowrap }
+.prod span { font: 500 12px var(--mono); color: var(--aviso) }
+.prod.off { opacity: .45 }
+.buscar { width: 100%; background: var(--card2); border: 1px solid var(--linea); border-radius: 10px; padding: 9px 12px; margin-top: 10px; color: var(--fg) }
 .vacio { color: var(--tenue); font-size: 13px; padding: 8px 0 }
 .medalla { font: 600 26px var(--display); color: var(--aviso); display: inline-block; border-radius: 6px }
+.enlaces { display: grid; grid-template-columns: 1fr 1fr; gap: 10px }
+.enlace { display: flex; align-items: center; gap: 10px; padding: 12px; border-radius: 12px; background: var(--card2); color: var(--fg); text-decoration: none; font-weight: 500; font-size: 13px; border: 1px solid var(--linea) }
+.enlace:active { transform: scale(.98) }
+.enlace svg { width: 18px; height: 18px; color: var(--acento); flex: none }
+.consejo { display: flex; gap: 10px; align-items: flex-start; padding: 12px; border-radius: 12px; background: color-mix(in srgb, var(--aviso) 10%, var(--card)); border: 1px solid color-mix(in srgb, var(--aviso) 35%, var(--linea)); font-size: 13px }
+.consejo.bien { background: color-mix(in srgb, var(--bien) 8%, var(--card)); border-color: color-mix(in srgb, var(--bien) 30%, var(--linea)) }
+.nota { display: flex; gap: 10px; align-items: center }
+.nota input { flex: 1; min-width: 0 }
+.x { border: 0; background: none; color: var(--tenue); cursor: pointer; font-size: 16px; padding: 0 4px }
 
 .velo { position: fixed; inset: 0; background: rgba(0,0,0,.55); z-index: 20; opacity: 0; pointer-events: none; transition: opacity .25s }
 .velo.abierto { opacity: 1; pointer-events: auto }
-.hoja {
-  position: fixed; left: 0; right: 0; bottom: 0; z-index: 21; max-height: 85vh; overflow-y: auto;
-  background: var(--card); border-top: 1px solid var(--linea); border-radius: 22px 22px 0 0;
-  padding: 10px 18px calc(24px + env(safe-area-inset-bottom, 0px)); transform: translateY(105%); transition: transform .35s cubic-bezier(.2,.8,.2,1);
-  max-width: 620px; margin: 0 auto;
-}
+.hoja { position: fixed; left: 0; right: 0; bottom: 0; z-index: 21; max-height: 86vh; overflow-y: auto; background: var(--card); border-top: 1px solid var(--linea); border-radius: 22px 22px 0 0; padding: 10px 18px calc(24px + env(safe-area-inset-bottom, 0px)); transform: translateY(105%); transition: transform .35s cubic-bezier(.2,.8,.2,1); max-width: 620px; margin: 0 auto }
 .hoja.abierta { transform: none }
 .hoja .asa { width: 40px; height: 4px; border-radius: 4px; background: var(--linea); margin: 0 auto 14px }
 .hoja h2 { margin: 0 0 4px; font: 600 18px var(--display) }
@@ -147,30 +182,43 @@ th { font-weight: 500; font-size: 10px; letter-spacing: .12em; text-transform: u
 .interruptor::after { content: ""; position: absolute; top: 3px; left: 3px; width: 18px; height: 18px; border-radius: 50%; background: var(--fg); transition: transform .2s }
 .interruptor:checked { background: var(--acento) }
 .interruptor:checked::after { transform: translateX(18px); background: var(--bg) }
-.campo { width: 90px; background: var(--card2); border: 1px solid var(--linea); border-radius: 10px; color: var(--fg); font: 500 14px var(--mono); padding: 8px 10px; text-align: right }
-.boton { border: 1px solid var(--linea); background: var(--card2); border-radius: 12px; padding: 11px 14px; cursor: pointer; font: 500 13px var(--texto); width: 100% }
+.campo, select.campo { width: 110px; background: var(--card2); border: 1px solid var(--linea); border-radius: 10px; color: var(--fg); font: 500 14px var(--mono); padding: 8px 10px; text-align: right }
+.campo.largo { width: 100%; text-align: left }
+.boton { border: 1px solid var(--linea); background: var(--card2); border-radius: 12px; padding: 11px 14px; cursor: pointer; font: 500 13px var(--texto); width: 100%; color: var(--fg) }
 .boton.principal { background: var(--acento); color: var(--bg); border-color: var(--acento) }
 .boton:active { transform: scale(.98) }
+.botones { display: grid; grid-template-columns: 1fr 1fr; gap: 10px }
 
-.toast { position: fixed; left: 50%; top: calc(14px + env(safe-area-inset-top, 0px)); z-index: 30; transform: translate(-50%, -160%); background: var(--fg); color: var(--bg); padding: 10px 16px; border-radius: 12px; font: 500 13px var(--texto); box-shadow: 0 10px 30px rgba(0,0,0,.4); transition: transform .4s cubic-bezier(.2,.8,.2,1); max-width: calc(100% - 32px) }
+.toast { position: fixed; left: 50%; top: calc(14px + env(safe-area-inset-top, 0px)); z-index: 30; transform: translate(-50%, -160%); background: var(--fg); color: var(--bg); padding: 10px 16px; border-radius: 12px; font: 500 13px var(--texto); box-shadow: 0 10px 30px var(--sombra); transition: transform .4s cubic-bezier(.2,.8,.2,1); max-width: calc(100% - 32px) }
 .toast.ver { transform: translate(-50%, 0) }
+#confeti { position: fixed; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 40 }
 .pie { text-align: center; color: var(--tenue); font: 400 11px var(--mono); padding: 8px 0 }
+
+/* modo TV */
+body.tv .menu, body.tv .top .icono-btn, body.tv .vista:not(#v-inicio), body.tv #v-inicio > :not(.hero):not(#tarjetas), body.tv .pie { display: none !important }
+body.tv #v-inicio { display: grid !important }
+body.tv .hero .grande { font-size: clamp(64px, 16vw, 140px) }
+body.tv #tarjetas { grid-template-columns: repeat(4, 1fr) !important }
+body.tv #tarjetas .num { font-size: clamp(30px, 5vw, 56px) }
+.salir-tv { display: none }
+body.tv .salir-tv { display: block; position: fixed; right: 16px; bottom: 16px; z-index: 12 }
 
 @media (min-width: 760px) {
   body { padding-bottom: 40px }
-  .menu { position: sticky; top: calc(68px + env(safe-area-inset-top, 0px)); bottom: auto; justify-content: flex-start; background: rgba(7,9,13,.9); border: 0; padding: 0 0 10px; z-index: 4 }
+  .menu { position: sticky; top: calc(68px + env(safe-area-inset-top, 0px)); bottom: auto; justify-content: flex-start; background: color-mix(in srgb, var(--bg) 92%, transparent); border: 0; padding: 0 0 10px; z-index: 4 }
   .menu button { grid-auto-flow: column; gap: 6px; font-size: 12px; padding: 8px 12px; max-width: none; flex: none; color: var(--sub) }
   .menu button svg { width: 16px; height: 16px }
   .grid-inicio { grid-template-columns: repeat(4, 1fr) !important }
 }
-@media (max-width: 400px) { .num { font-size: 26px } .num.grande { font-size: 46px } .grid3 { grid-template-columns: 1fr 1fr } .calor { grid-template-columns: repeat(8, 1fr) } }
+@media (max-width: 400px) { .num { font-size: 26px } .num.grande { font-size: 46px } .grid3 { grid-template-columns: 1fr 1fr } .calor { grid-template-columns: repeat(8, 1fr) } .srv { grid-template-columns: 1fr 34px 80px 56px; gap: 6px } }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important } }
 </style>
 </head>
 <body>
+<canvas id="confeti"></canvas>
 <div class="app">
   <header class="top">
-    <img id="icono" alt="" src="data:image/gif;base64,R0lGODlhAQABAAAAACw=">
+    <img id="icono" alt="" src="icono-192.png">
     <div class="tt"><h1>Defiende tu tropa! Stats</h1><small><span class="led" id="led"></span><span id="act">conectando…</span></small></div>
     <button class="icono-btn" id="btnAct" aria-label="Actualizar ahora">
       <svg class="anillo" viewBox="0 0 42 42"><circle id="anillo" cx="21" cy="21" r="19" stroke-dasharray="119.4" stroke-dashoffset="0"/></svg>
@@ -180,17 +228,19 @@ th { font-weight: 500; font-size: 10px; letter-spacing: .12em; text-transform: u
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></svg>
     </button>
   </header>
+  <div class="tirar" id="tirar"><span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M6 13l6 6 6-6"/></svg> suelta para actualizar</span></div>
 
   <nav class="menu" id="menu" aria-label="Secciones">
     <button data-v="inicio" aria-current="page"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M3 11 12 4l9 7v9h-6v-6H9v6H3z"/></svg>Inicio</button>
     <button data-v="jugadores"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.8-3.6 3.4-5.5 6.5-5.5s5.7 1.9 6.5 5.5M16 4.5a3.5 3.5 0 0 1 0 7M18.5 14.8c1.6.8 2.7 2.5 3 5.2"/></svg>Jugadores</button>
     <button data-v="visitas"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l5-6 4 4 8-9"/><path d="M15 6h5v5"/></svg>Visitas</button>
     <button data-v="servidores"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="6" rx="2"/><rect x="3" y="14" width="18" height="6" rx="2"/><path d="M7 7h.01M7 17h.01"/></svg>Servers</button>
-    <button data-v="records"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M7 4h10v5a5 5 0 0 1-10 0zM7 6H4v2a3 3 0 0 0 3 3M17 6h3v2a3 3 0 0 1-3 3M9 20h6M12 14v6"/></svg>Récords</button>
     <button data-v="juego"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="7" width="18" height="11" rx="4"/><path d="M8 11v3M6.5 12.5h3M15 12h.01M17.5 13.5h.01"/></svg>Juego</button>
+    <button data-v="mas"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M7 4h10v5a5 5 0 0 1-10 0zM7 6H4v2a3 3 0 0 0 3 3M17 6h3v2a3 3 0 0 1-3 3M9 20h6M12 14v6"/></svg>Más</button>
   </nav>
 
   <main id="main" class="cargando">
+    <!-- ============ INICIO ============ -->
     <section class="vista activa" id="v-inicio">
       <div class="card hero">
         <div class="etq">Visitas totales</div>
@@ -202,34 +252,71 @@ th { font-weight: 500; font-size: 10px; letter-spacing: .12em; text-transform: u
         </div>
       </div>
       <div class="card">
+        <div class="fila"><div class="etq">Resumen</div><span class="estado-pill igual" id="tendencia">—</span></div>
+        <p class="frase" id="frase" style="margin:10px 0 0">Calculando…</p>
+      </div>
+      <div class="grid2">
+        <div class="card">
+          <div class="fila"><div class="etq">Objetivo de hoy</div><div class="etq" id="objVTxt">—</div></div>
+          <div class="barra" style="margin-top:12px"><i id="objV"></i></div>
+          <div class="sub" id="objVSub">visitas · cámbialo en ajustes</div>
+        </div>
+        <div class="card">
+          <div class="fila"><div class="etq">Objetivo jugadores</div><div class="etq" id="objJTxt">—</div></div>
+          <div class="barra" style="margin-top:12px"><i id="objJ"></i></div>
+          <div class="sub" id="objJSub">a la vez · pico de hoy</div>
+        </div>
+      </div>
+      <div class="card">
         <div class="fila"><div class="etq">Próximo hito</div><div class="etq" id="hitoA">—</div></div>
         <div class="fila" style="margin:8px 0 10px"><span class="num" data-k="hitoPct" data-suf="%">0</span><span class="sub" id="hitoEta" style="margin:0">—</span></div>
         <div class="barra"><i id="hitoBarra"></i></div>
       </div>
       <div class="grid2 grid-inicio" id="tarjetas"></div>
-      <div class="pie">Toca el botón de ajustes (arriba a la derecha) para elegir qué tarjetas ves aquí</div>
+      <div class="pie" id="estadoRobot">—</div>
+      <div class="pie">Desliza hacia los lados para cambiar de sección · tira hacia abajo para actualizar</div>
     </section>
 
+    <!-- ============ JUGADORES ============ -->
     <section class="vista" id="v-jugadores">
       <h2 class="titulo">Jugadores</h2>
       <div class="grid3">
         <div class="card"><div class="etq">Ahora</div><div class="num" data-k="playing">0</div><div class="sub" id="vsJug">&nbsp;</div></div>
-        <div class="card"><div class="etq">Pico hoy</div><div class="num" data-k="pico">0</div><div class="sub">a la vez</div></div>
+        <div class="card"><div class="etq">Pico hoy</div><div class="num" data-k="pico">0</div><div class="sub" id="picoHora">a la vez</div></div>
         <div class="card"><div class="etq">Media hoy</div><div class="num" data-k="media" data-dec="1">0</div><div class="sub">jugadores</div></div>
+        <div class="card"><div class="etq">Lo normal ahora</div><div class="num" data-k="normal" data-dec="1">0</div><div class="sub" id="normalTxt">media a esta hora</div></div>
+        <div class="card"><div class="etq">Sesión media</div><div class="num" data-k="sesion" data-dec="1" data-suf=" min">0</div><div class="sub">estimada</div></div>
+        <div class="card"><div class="etq">Por servidor</div><div class="num" data-k="porServ" data-dec="1">0</div><div class="sub">jugadores de media</div></div>
       </div>
       <div class="card">
         <div class="fila"><div class="etq">Jugadores online</div>
-          <div class="tabs" id="rangos"><button data-h="1">1H</button><button data-h="6" aria-pressed="true">6H</button><button data-h="24">24H</button><button data-h="72">3D</button><button data-h="168">7D</button></div>
+          <div class="tabs" id="rangos"><button data-h="1">1H</button><button data-h="6" aria-pressed="true">6H</button><button data-h="24">24H</button><button data-h="72">3D</button><button data-h="168">7D</button><button data-h="720">30D</button></div>
         </div>
         <div class="lienzo"><canvas id="cvJug"></canvas><div class="tip" id="tipJug"></div></div>
+        <div class="leyenda"><span><i style="background:var(--acento)"></i>hoy</span><span id="leyAyer"><i style="background:var(--tenue)"></i>ayer a la misma hora</span><span><i style="background:var(--aviso)"></i>tus notas</span></div>
+        <div class="conm">
+          <label><input type="checkbox" id="verAyer" checked> comparar con ayer</label>
+          <label><input type="checkbox" id="suave"> suavizar</label>
+        </div>
       </div>
       <div class="card">
         <div class="etq">Mejores horas del día</div>
         <div class="sub">Media de jugadores a cada hora (más brillante = más gente). Te dice cuándo sacar updates.</div>
         <div class="calor" id="calor"></div>
+        <div class="sub" id="picoValle" style="margin-top:10px">—</div>
+      </div>
+      <div class="card">
+        <div class="etq">Semana por horas</div>
+        <div class="sub">Cada fila es un día de la semana; cada casilla, una hora.</div>
+        <div class="semana" id="semana"></div>
+      </div>
+      <div class="card">
+        <div class="etq">Servidores abiertos en el tiempo</div>
+        <div class="lienzo"><canvas id="cvServ" class="bajo"></canvas><div class="tip" id="tipServ"></div></div>
       </div>
     </section>
 
+    <!-- ============ VISITAS ============ -->
     <section class="vista" id="v-visitas">
       <h2 class="titulo">Visitas</h2>
       <div class="grid2">
@@ -237,14 +324,22 @@ th { font-weight: 500; font-size: 10px; letter-spacing: .12em; text-transform: u
         <div class="card"><div class="etq">Previstas hoy</div><div class="num" data-k="proyeccion">0</div><div class="sub">al ritmo de hoy</div></div>
         <div class="card"><div class="etq">Última hora</div><div class="num" data-k="hora">0</div><div class="sub">60 min</div></div>
         <div class="card"><div class="etq">Últimas 24 h</div><div class="num" data-k="dia">0</div><div class="sub">24 horas</div></div>
+        <div class="card"><div class="etq">Esta semana</div><div class="num" data-k="semanaV">0</div><div class="sub" id="vsSemana">últimos 7 días</div></div>
+        <div class="card"><div class="etq">Previsión mes</div><div class="num" data-k="mesPrev">0</div><div class="sub" id="prevSemana">al ritmo actual</div></div>
       </div>
       <div class="card">
-        <div class="etq">Visitas por hora · 24 h</div>
+        <div class="etq">Visitas por hora · hoy vs ayer</div>
         <div class="lienzo"><canvas id="cvHoras"></canvas><div class="tip" id="tipHoras"></div></div>
+        <div class="leyenda"><span><i style="background:var(--acento)"></i>hoy</span><span><i style="background:var(--tenue)"></i>ayer</span></div>
       </div>
       <div class="card">
-        <div class="etq">Últimos 7 días</div>
-        <div class="scroll"><table><thead><tr><th>Día</th><th>Visitas</th><th>Pico</th><th>Media</th><th>Favs</th></tr></thead><tbody id="dias"></tbody></table></div>
+        <div class="etq">Calendario · 30 días</div>
+        <div class="sub">Cada casilla es un día; más brillante = más visitas. Toca una para ver el número.</div>
+        <div class="calendario" id="calendario"></div>
+      </div>
+      <div class="card">
+        <div class="etq">Últimos días</div>
+        <div class="scroll"><table><thead><tr><th>Día</th><th>Visitas</th><th>Pico</th><th>Media</th><th>Favs</th><th>Favs/1k</th></tr></thead><tbody id="dias"></tbody></table></div>
       </div>
       <div class="grid2">
         <div class="card">
@@ -254,534 +349,158 @@ th { font-weight: 500; font-size: 10px; letter-spacing: .12em; text-transform: u
         </div>
         <div class="card"><div class="etq">Favoritos</div><div class="num" data-k="fav">0</div><div class="sub" id="favTxt">—</div></div>
       </div>
+      <div class="card">
+        <div class="etq">Evolución del % me gusta</div>
+        <div class="lienzo"><canvas id="cvLike" class="bajo"></canvas><div class="tip" id="tipLike"></div></div>
+      </div>
+      <div class="card">
+        <div class="etq">Cuándo llegarás a cada hito</div>
+        <div class="lista" id="hitosEta" style="margin-top:6px"></div>
+      </div>
     </section>
 
+    <!-- ============ SERVIDORES ============ -->
     <section class="vista" id="v-servidores">
       <h2 class="titulo">Servidores</h2>
       <div class="grid2">
         <div class="card"><div class="etq">Abiertos</div><div class="num" data-k="nServ">0</div><div class="sub" id="servLlenos">—</div></div>
         <div class="card"><div class="etq">Ocupación</div><div class="num" data-k="ocupacion" data-suf="%">0</div><div class="sub">de las plazas</div></div>
-        <div class="card"><div class="etq">FPS medio</div><div class="num" data-k="fpsMedio">0</div><div class="sub">del servidor</div></div>
-        <div class="card"><div class="etq">Ping medio</div><div class="num" data-k="pingMedio" data-suf=" ms">0</div><div class="sub">latencia</div></div>
+        <div class="card"><div class="etq">Plazas libres</div><div class="num" data-k="libres">0</div><div class="sub">en total</div></div>
+        <div class="card"><div class="etq">FPS / ping</div><div class="num" data-k="fpsMedio">0</div><div class="sub" id="pingTxt">—</div></div>
       </div>
+      <div class="consejo" id="consejoServ" hidden></div>
       <div class="card">
-        <div class="fila"><div class="etq">Cada servidor</div><div class="etq" id="servHora">—</div></div>
-        <div class="lista" id="servers" style="margin-top:8px"></div>
+        <div class="fila"><div class="etq">Cada servidor</div>
+          <div class="tabs" id="ordenServ"><button data-o="lleno" aria-pressed="true">Más llenos</button><button data-o="ping">Mejor ping</button><button data-o="fps">Peor FPS</button></div>
+        </div>
+        <div class="sub" id="servHora" style="margin-top:8px">—</div>
+        <div class="lista" id="servers" style="margin-top:4px"></div>
       </div>
     </section>
 
-    <section class="vista" id="v-records">
-      <h2 class="titulo">Récords</h2>
-      <div class="grid2">
-        <div class="card"><div class="etq">Récord de jugadores</div><div class="medalla" data-k="record">0</div><div class="sub" id="recTxt">—</div></div>
-        <div class="card"><div class="etq">Mejor hora</div><div class="medalla" data-k="mejorHoraV">0</div><div class="sub" id="mhTxt">visitas en una hora</div></div>
-        <div class="card"><div class="etq">Mejor día</div><div class="medalla" data-k="mejorDiaV">0</div><div class="sub" id="mdTxt">visitas en un día</div></div>
-        <div class="card"><div class="etq">Más favoritos en un día</div><div class="medalla" data-k="mejorFavV">0</div><div class="sub" id="mfTxt">—</div></div>
-      </div>
-      <div class="card">
-        <div class="etq">Hitos de visitas</div>
-        <div class="lista" id="hitos" style="margin-top:6px"></div>
-      </div>
-    </section>
-
+    <!-- ============ JUEGO ============ -->
     <section class="vista" id="v-juego">
       <h2 class="titulo">El juego</h2>
       <div class="card"><div class="galeria" id="galeria"></div></div>
+      <div class="enlaces" id="enlaces"></div>
+      <div class="consejo" id="consejoUpd" hidden></div>
+      <div class="grid2">
+        <div class="card"><div class="etq">Última update</div><div class="num" data-k="diasUpd" data-suf=" d">0</div><div class="sub" id="updTxt">—</div></div>
+        <div class="card"><div class="etq">Edad del juego</div><div class="num" data-k="edadD" data-suf=" d">0</div><div class="sub" id="edadTxt">—</div></div>
+      </div>
+      <div class="card">
+        <div class="etq">Updates y su efecto</div>
+        <div class="sub">Visitas en las 24 h antes y después de cada update.</div>
+        <div class="lista" id="updates" style="margin-top:6px"></div>
+      </div>
+      <div class="card">
+        <div class="fila"><div class="etq">Competencia</div><div class="etq" id="posComp">—</div></div>
+        <div class="sub">Juegos que Roblox recomienda junto al tuyo, ordenados por jugadores ahora.</div>
+        <div class="lista" id="competencia" style="margin-top:6px"></div>
+      </div>
+      <h3 class="seccion">Tienda</h3>
+      <div class="grid3">
+        <div class="card"><div class="etq">Gamepasses</div><div class="num" data-k="nPases">0</div><div class="sub" id="pasesTxt">—</div></div>
+        <div class="card"><div class="etq">Productos</div><div class="num" data-k="nProd">0</div><div class="sub" id="prodTxt">—</div></div>
+        <div class="card"><div class="etq">Precio medio</div><div class="num" data-k="precioMedio" data-suf=" R$">0</div><div class="sub">de todo</div></div>
+      </div>
+      <div class="card">
+        <div class="etq">Gamepasses</div>
+        <div class="tienda" id="pases"></div>
+      </div>
+      <div class="card">
+        <div class="etq">Productos del juego</div>
+        <input class="buscar" id="buscarProd" type="search" placeholder="Buscar producto…" aria-label="Buscar producto">
+        <div class="tienda" id="productos"></div>
+      </div>
+      <h3 class="seccion">Grupo y comunidad</h3>
       <div class="grid2">
         <div class="card"><div class="etq">Miembros del grupo</div><div class="num" data-k="grupo">0</div><div class="sub" id="grpTxt">—</div></div>
-        <div class="card"><div class="etq">Edad del juego</div><div class="num" data-k="edadD" data-suf=" días">0</div><div class="sub" id="edadTxt">—</div></div>
+        <div class="card"><div class="etq">Seguidores del dueño</div><div class="num" data-k="seguidores">0</div><div class="sub" id="folTxt">—</div></div>
       </div>
+      <div class="card"><div class="etq">Rangos del grupo</div><div class="lista" id="roles" style="margin-top:6px"></div></div>
+      <div class="card"><div class="etq">Juegos del grupo</div><div class="lista" id="juegosGrupo" style="margin-top:6px"></div></div>
       <div class="card">
         <div class="etq">Ficha completa</div>
         <div class="lista" id="ficha" style="margin-top:6px"></div>
         <p class="desc" id="desc"></p>
       </div>
     </section>
-  </main>
-  <div class="pie">Directo cada 30 s · historial guardado cada 5 min, las 24 h</div>
-</div>
 
+    <!-- ============ MAS ============ -->
+    <section class="vista" id="v-mas">
+      <h2 class="titulo">Más</h2>
+      <h3 class="seccion">Récords</h3>
+      <div class="grid2">
+        <div class="card"><div class="etq">Jugadores a la vez</div><div class="medalla" data-k="record">0</div><div class="sub" id="recTxt">—</div></div>
+        <div class="card"><div class="etq">Mejor hora</div><div class="medalla" data-k="mejorHoraV">0</div><div class="sub" id="mhTxt">visitas en una hora</div></div>
+        <div class="card"><div class="etq">Mejor día</div><div class="medalla" data-k="mejorDiaV">0</div><div class="sub" id="mdTxt">visitas en un día</div></div>
+        <div class="card"><div class="etq">Favoritos en un día</div><div class="medalla" data-k="mejorFavV">0</div><div class="sub" id="mfTxt">—</div></div>
+        <div class="card"><div class="etq">Servidores a la vez</div><div class="medalla" data-k="recServ">0</div><div class="sub" id="rsTxt">—</div></div>
+        <div class="card"><div class="etq">Miembros en un día</div><div class="medalla" data-k="recGrp">0</div><div class="sub" id="rgTxt">—</div></div>
+      </div>
+      <div class="card"><div class="etq">Hitos conseguidos</div><div class="lista" id="hitos" style="margin-top:6px"></div></div>
+
+      <h3 class="seccion">Buscar en el historial</h3>
+      <div class="card">
+        <div class="sub" style="margin:0 0 8px">Elige un momento y te digo cómo estaba el juego.</div>
+        <input class="campo largo" id="buscarFecha" type="datetime-local" aria-label="Fecha y hora">
+        <div class="lista" id="resBuscar" style="margin-top:8px"></div>
+      </div>
+
+      <h3 class="seccion">Notas</h3>
+      <div class="card">
+        <div class="sub" style="margin:0 0 8px">Apunta lo que haces (una update, un anuncio…) y sale marcado en la gráfica de jugadores.</div>
+        <div class="nota"><input class="campo largo" id="notaTxt" placeholder="Ej.: saqué la update de Halloween" maxlength="80"><button class="boton principal" id="notaAdd" style="width:auto">Añadir</button></div>
+        <div class="lista" id="notas" style="margin-top:8px"></div>
+      </div>
+
+      <h3 class="seccion">Compartir</h3>
+      <div class="botones">
+        <button class="boton" id="btnCopiar">Copiar resumen para Discord</button>
+        <button class="boton" id="btnTarjeta">Compartir imagen de hoy</button>
+      </div>
+      <div class="botones">
+        <button class="boton" id="btnCsv">Descargar historial (Excel)</button>
+        <button class="boton" id="btnJson">Descargar datos (JSON)</button>
+      </div>
+      <button class="boton" id="btnTV">Modo TV (pantalla completa)</button>
+    </section>
+  </main>
+  <div class="pie">Directo cada pocos segundos · historial guardado cada 5 min, las 24 h</div>
+</div>
+<button class="boton salir-tv" id="salirTV" style="width:auto">Salir del modo TV</button>
+
+<!-- ============ AJUSTES ============ -->
 <div class="velo" id="velo"></div>
 <aside class="hoja" id="hoja" aria-label="Ajustes">
   <div class="asa"></div>
   <h2>Ajustes</h2>
   <div class="sub">Se guardan en este móvil.</div>
+  <h3>Aspecto</h3>
+  <div class="opc"><label for="tema">Tema</label><select class="campo" id="tema"><option value="dark">Oscuro</option><option value="light">Claro</option></select></div>
+  <div class="opc"><label for="compacto">Números cortos (8,4 K)</label><input type="checkbox" class="interruptor" id="compacto"></div>
+  <div class="opc"><label for="intervalo">Actualizar cada</label><select class="campo" id="intervalo"><option value="15">15 s</option><option value="30">30 s</option><option value="60">60 s</option></select></div>
+  <h3>Objetivos</h3>
+  <div class="opc"><label for="objVis">Visitas al día</label><input class="campo" id="objVis" type="number" min="1" inputmode="numeric"></div>
+  <div class="opc"><label for="objJug">Jugadores a la vez</label><input class="campo" id="objJug" type="number" min="1" inputmode="numeric"></div>
   <h3>Tarjetas de Inicio</h3>
   <div id="opcTarjetas"></div>
   <h3>Avisos</h3>
-  <div class="opc"><label for="avisoOn">Avisarme cuando haya muchos jugadores</label><input type="checkbox" class="interruptor" id="avisoOn"></div>
-  <div class="opc"><label for="avisoN">A partir de cuántos</label><input class="campo" id="avisoN" type="number" min="1" inputmode="numeric" value="10"></div>
-  <div class="opc"><label for="vibrar">Vibrar al avisar</label><input type="checkbox" class="interruptor" id="vibrar" checked></div>
-  <h3>Datos</h3>
-  <button class="boton" id="btnCsv">Descargar historial (para Excel)</button>
+  <div class="opc"><label for="avisoOn">Avisar con muchos jugadores</label><input type="checkbox" class="interruptor" id="avisoOn"></div>
+  <div class="opc"><label for="avisoN">A partir de cuántos</label><input class="campo" id="avisoN" type="number" min="1" inputmode="numeric"></div>
+  <div class="opc"><label for="avisoViral">Avisar si se dispara (pico viral)</label><input type="checkbox" class="interruptor" id="avisoViral"></div>
+  <div class="opc"><label for="avisoRec">Celebrar récords e hitos</label><input type="checkbox" class="interruptor" id="avisoRec"></div>
+  <div class="opc"><label for="vibrar">Vibrar al avisar</label><input type="checkbox" class="interruptor" id="vibrar"></div>
+  <h3>App</h3>
+  <button class="boton" id="btnInstalar" hidden>Instalar como app</button>
+  <div class="sub" id="instalarTxt">En el móvil: menú del navegador → "Añadir a pantalla de inicio".</div>
+  <div style="height:10px"></div>
+  <button class="boton" id="btnReset">Restablecer ajustes</button>
   <div style="height:10px"></div>
   <button class="boton principal" id="btnCerrar">Listo</button>
 </aside>
 <div class="toast" id="toast" role="status"></div>
-
-<script>
-const UNIVERSO = 10741812327;
-const HIST_URL = "https://raw.githubusercontent.com/ruben99roblox-gif/defiende-tu-tropa/datos/historial.json";
-const HITOS = [1e3, 2.5e3, 5e3, 1e4, 2.5e4, 5e4, 1e5, 2.5e5, 5e5, 1e6, 2.5e6, 5e6, 1e7];
-const CADA = 30;
-const TARJETAS = {
-  playing: ["Jugando ahora", "en todos los servidores"],
-  hoy: ["Visitas hoy", "desde medianoche"],
-  hora: ["Última hora", "visitas en 60 min"],
-  dia: ["Últimas 24 h", "visitas"],
-  pico: ["Pico de hoy", "jugadores a la vez"],
-  media: ["Media hoy", "jugadores"],
-  fav: ["Favoritos", "en total"],
-  favHoy: ["Favoritos hoy", "nuevos"],
-  like: ["Me gusta", "de los votos"],
-  porMin: ["Visitas / min", "media de 10 min"],
-  nServ: ["Servidores", "abiertos"],
-  record: ["Récord", "jugadores a la vez"],
-  grupo: ["Grupo", "miembros"],
-  proyeccion: ["Previstas hoy", "visitas al ritmo actual"],
-};
-const POR_DEFECTO = ["playing", "hoy", "hora", "pico", "fav", "like", "nServ", "grupo"];
-
-const $ = id => document.getElementById(id);
-const fmt = (n, dec = 0) => n == null || isNaN(n) ? "—" : Number(n).toLocaleString("es-ES", {useGrouping: "always", maximumFractionDigits: dec, minimumFractionDigits: 0});
-const lento = matchMedia("(prefers-reduced-motion: reduce)").matches;
-const css = v => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
-const leer = (k, d) => { try { const v = localStorage.getItem("dtt_" + k); return v == null ? d : JSON.parse(v); } catch { return d; } };
-const guardar = (k, v) => { try { localStorage.setItem("dtt_" + k, JSON.stringify(v)); } catch {} };
-const hace = iso => {
-  if (!iso) return "—";
-  const s = (Date.now() - new Date(iso)) / 1000;
-  if (s < 3600) return `hace ${Math.max(1, Math.round(s / 60))} min`;
-  if (s < 86400) return `hace ${Math.round(s / 3600)} h`;
-  return `hace ${Math.round(s / 86400)} días`;
-};
-const duracion = seg => seg < 3600 ? `${Math.round(seg / 60)} min` : seg < 172800 ? `${Math.round(seg / 3600)} h` : `${Math.round(seg / 86400)} días`;
-const fecha = t => new Date(t * 1000).toLocaleString("es-ES", {day: "numeric", month: "short", hour: "2-digit", minute: "2-digit"});
-const diaNombre = t => new Date(t * 1000).toLocaleDateString("es-ES", {weekday: "long", day: "numeric"});
-const flecha = (a, b) => {
-  if (b == null) return "";
-  const d = a - b, p = b ? Math.round(d / b * 100) : null;
-  return `<span class="vs ${d >= 0 ? "sube" : "baja"}">${d >= 0 ? "▲" : "▼"} ${p == null ? fmt(Math.abs(d)) : Math.abs(p) + "%"} vs ayer</span>`;
-};
-
-function toast(txt) {
-  const t = $("toast"); t.textContent = txt; t.classList.add("ver");
-  clearTimeout(toast.t); toast.t = setTimeout(() => t.classList.remove("ver"), 3200);
-}
-
-// numeros que cuentan hasta su valor y destellan verde/rojo cuando cambian
-const mostrado = new WeakMap();
-function contar(el, valor) {
-  if (!el) return;
-  const dec = +(el.dataset.dec || 0), suf = el.dataset.suf || "";
-  if (valor == null || isNaN(valor)) { el.textContent = "—"; return; }
-  const habia = mostrado.has(el), desde = habia ? mostrado.get(el) : 0;
-  mostrado.set(el, valor);
-  if (habia && desde !== valor) {
-    el.classList.remove("sube", "baja"); void el.offsetWidth;
-    el.classList.add(valor > desde ? "sube" : "baja");
-    setTimeout(() => el.classList.remove("sube", "baja"), 1400);
-  }
-  if (lento || (habia && desde === valor)) { el.textContent = fmt(valor, dec) + suf; return; }
-  const t0 = performance.now(), dur = habia ? 700 : 1100;
-  const paso = ahora => {
-    const u = Math.min(1, (ahora - t0) / dur), e = 1 - Math.pow(1 - u, 3);
-    el.textContent = fmt(desde + (valor - desde) * e, u < 1 ? 0 : dec) + suf;
-    if (u < 1) requestAnimationFrame(paso);
-  };
-  requestAnimationFrame(paso);
-}
-
-let robot = null, robotLeido = 0, icono = null, S = null;
-
-async function json(url) {
-  const r = await fetch(url, {cache: "no-store"});
-  if (!r.ok) throw new Error("HTTP " + r.status);
-  return r.json();
-}
-
-function calcular(filas, R) {
-  const a = filas.at(-1), ahora = a.t;
-  const en = t => filas.find(f => f.t >= t) || a;
-  const d0 = new Date(); d0.setHours(0, 0, 0, 0); const medianoche = Math.floor(d0 / 1000);
-  const h1 = en(ahora - 3600), d1 = en(ahora - 86400), hoy = en(medianoche), m10 = en(ahora - 600);
-  const hoyFilas = filas.filter(f => f.t >= medianoche), inicio = filas[0].t;
-  const ult = k => { for (let i = filas.length - 1; i >= 0; i--) if (filas[i][k] != null) return filas[i]; return {}; };
-  const vot = ult("up"), votos = (vot.up || 0) + (vot.down || 0);
-  const votHoy = filas.find(f => f.t >= medianoche && f.up != null);
-  const grp = ult("grp"), grpHoy = filas.find(f => f.t >= medianoche && f.grp != null);
-
-  let ayer = null;
-  if (inicio <= medianoche - 86400 + 900) {
-    const a0 = en(medianoche - 86400), a1 = en(ahora - 86400);
-    ayer = {hoy: a1.visits - a0.visits, playing: a1.playing};
-  }
-  const horaAct = ahora - ahora % 3600, porHora = [];
-  for (let i = 23; i >= 0; i--) {
-    const t0 = horaAct - i * 3600;
-    if (t0 + 3600 < inicio) { porHora.push([t0, null]); continue; }
-    porHora.push([t0, Math.max(0, en(Math.min(t0 + 3600, ahora)).visits - en(Math.max(t0, inicio)).visits)]);
-  }
-  let mejorHora = {v: 0, t: null};
-  for (let t0 = inicio - inicio % 3600 + 3600; t0 + 3600 <= ahora; t0 += 3600) {
-    const v = en(t0 + 3600).visits - en(t0).visits;
-    if (v > mejorHora.v) mejorHora = {v, t: t0};
-  }
-  const dias = [];
-  for (let i = 0; i < 7; i++) {
-    const d = medianoche - i * 86400, fs = filas.filter(f => f.t >= d && f.t < d + 86400);
-    if (!fs.length) continue;
-    dias.push({t: d, visitas: fs.at(-1).visits - fs[0].visits, pico: Math.max(...fs.map(f => f.playing)),
-      media: fs.reduce((s, f) => s + f.playing, 0) / fs.length, fav: fs.at(-1).fav - fs[0].fav, completo: fs[0].t - d < 900});
-  }
-  const validos = dias.filter(d => d.completo || d.t === medianoche);
-  const mejorDia = validos.reduce((m, d) => d.visitas > m.visitas ? d : m, {visitas: 0});
-  const mejorFav = validos.reduce((m, d) => d.fav > m.fav ? d : m, {fav: 0});
-  const suma = Array(24).fill(0), cuenta = Array(24).fill(0);
-  filas.forEach(f => { const h = new Date(f.t * 1000).getHours(); suma[h] += f.playing; cuenta[h]++; });
-  const calor = suma.map((s, h) => cuenta[h] ? s / cuenta[h] : null);
-  const sig = HITOS.find(h => h > a.visits) ?? null, prev = Math.max(0, ...HITOS.filter(h => h <= a.visits));
-  const ritmo = (a.visits - d1.visits) / Math.max(ahora - d1.t, 1) * 3600;
-  const hitosHechos = HITOS.filter(h => h <= a.visits).map(h => {
-    const f = filas.find(x => x.visits >= h);
-    return {h, t: f && f.t > inicio ? f.t : null};
-  });
-  const pasado = (ahora - medianoche) / 86400, hoyV = a.visits - hoy.visits;
-  const proyeccion = pasado > 0.04 && hoy.t - medianoche < 1800 ? Math.round(hoyV / pasado) : null;
-  const servidores = [...((R && R.servidores) || [])].sort((x, y) => y.playing - x.playing);
-  const conMax = servidores.filter(s => s.max);
-  const rec = filas.reduce((m, f) => f.playing > m.playing ? f : m, filas[0]);
-  const J = (R && R.juego) || {};
-  const edad = J.created ? (Date.now() / 1000 - new Date(J.created) / 1000) / 86400 : null;
-
-  return {
-    t: ahora, juego: J, grupoInfo: R && R.grupo, imagenes: (R && R.imagenes) || [], serversT: R && R.serversT,
-    playing: a.playing, visits: a.visits, fav: a.fav,
-    porMin: Math.round((a.visits - m10.visits) / Math.max((a.t - m10.t) / 60, 0.5) * 10) / 10,
-    hora: a.visits - h1.visits, hoy: hoyV, dia: a.visits - d1.visits,
-    pico: hoyFilas.length ? Math.max(...hoyFilas.map(f => f.playing)) : a.playing,
-    media: hoyFilas.length ? hoyFilas.reduce((s, f) => s + f.playing, 0) / hoyFilas.length : a.playing,
-    favHoy: a.fav - hoy.fav,
-    like: votos ? Math.round(100 * vot.up / votos) : null, up: vot.up, down: vot.down,
-    votosHoy: votHoy ? votos - votHoy.up - votHoy.down : null,
-    grupo: grp.grp ?? (R && R.grupo && R.grupo.members) ?? null, grupoHoy: grpHoy && grp.grp != null ? grp.grp - grpHoy.grp : null,
-    ayer, porHora, dias, calor, hitosHechos, proyeccion,
-    mejorHora, mejorHoraV: mejorHora.v, mejorDia, mejorDiaV: mejorDia.visitas, mejorFav, mejorFavV: mejorFav.fav,
-    record: rec.playing, recordT: rec.t,
-    hito: {sig, prev, eta: sig && ritmo > 0 ? (sig - a.visits) / ritmo * 3600 : null, ritmo},
-    hitoPct: sig ? Math.min(100, Math.floor((a.visits - prev) / (sig - prev) * 100)) : 100,
-    servidores, nServ: servidores.length,
-    llenos: servidores.filter(s => s.max && s.playing >= s.max).length,
-    ocupacion: conMax.length ? Math.round(100 * conMax.reduce((s, v) => s + v.playing, 0) / conMax.reduce((s, v) => s + v.max, 0)) : null,
-    fpsMedio: servidores.length ? Math.round(servidores.reduce((s, v) => s + v.fps, 0) / servidores.length) : null,
-    pingMedio: servidores.length ? Math.round(servidores.reduce((s, v) => s + v.ping, 0) / servidores.length) : null,
-    edad, edadD: edad == null ? null : Math.floor(edad), serie: filas.map(f => [f.t, f.playing]), filas,
-  };
-}
-
-function pintar() {
-  const s = S;
-  document.querySelectorAll("#main [data-k]").forEach(el => contar(el, s[el.dataset.k]));
-  if (icono && $("icono").dataset.ok !== "1") { $("icono").src = icono; $("icono").dataset.ok = "1"; }
-
-  $("chipProy").hidden = s.proyeccion == null;
-  $("hitoA").textContent = s.hito.sig ? `${fmt(s.visits)} / ${fmt(s.hito.sig)}` : "todos conseguidos";
-  $("hitoBarra").style.width = s.hitoPct + "%";
-  $("hitoEta").textContent = s.hito.eta ? `faltan ${fmt(s.hito.sig - s.visits)} · ~${duracion(s.hito.eta)}` : "midiendo el ritmo…";
-
-  $("vsJug").innerHTML = s.ayer ? flecha(s.playing, s.ayer.playing) : "vs ayer: desde mañana";
-  $("vsHoy").innerHTML = s.ayer ? flecha(s.hoy, s.ayer.hoy) : "desde medianoche";
-
-  $("likeBarra").style.width = (s.like ?? 0) + "%";
-  $("likeTxt").textContent = s.up == null ? "—" : `${fmt(s.up)} 👍 · ${fmt(s.down)} 👎${s.votosHoy ? ` · +${fmt(s.votosHoy)} hoy` : ""}`;
-  $("favTxt").textContent = `+${fmt(s.favHoy)} hoy · ${s.visits ? fmt(s.fav / s.visits * 1000, 1) : "—"} por cada 1.000 visitas`;
-
-  const tb = $("dias"); tb.textContent = "";
-  s.dias.forEach((d, i) => {
-    const nombre = i === 0 ? "Hoy" : i === 1 ? "Ayer" : new Date(d.t * 1000).toLocaleDateString("es-ES", {weekday: "short", day: "numeric"});
-    const tr = document.createElement("tr");
-    tr.innerHTML = `<td>${nombre}${d.completo || i === 0 ? "" : " *"}</td><td>${fmt(d.visitas)}</td><td>${fmt(d.pico)}</td><td>${fmt(d.media, 1)}</td><td>+${fmt(d.fav)}</td>`;
-    tb.appendChild(tr);
-  });
-  if (!s.dias.length) tb.innerHTML = '<tr><td colspan="5" class="vacio">Aún no hay días guardados</td></tr>';
-
-  $("servLlenos").textContent = s.llenos ? `${s.llenos} llenos` : "ninguno lleno";
-  $("servHora").textContent = s.serversT ? "visto " + new Date(s.serversT * 1000).toLocaleTimeString("es-ES", {hour: "2-digit", minute: "2-digit"}) : "—";
-  const sv = $("servers"); sv.textContent = "";
-  if (!s.servidores.length) sv.innerHTML = '<div class="vacio">No hay servidores abiertos ahora mismo.</div>';
-  s.servidores.forEach(v => {
-    const d = document.createElement("div");
-    d.className = "srv" + (v.max && v.playing >= v.max ? " lleno" : "");
-    d.innerHTML = `<div class="barra"><i></i></div><span>${v.playing}/${v.max}</span><span>${v.fps} fps · ${v.ping} ms</span>`;
-    sv.appendChild(d);
-    requestAnimationFrame(() => requestAnimationFrame(() => d.querySelector("i").style.width = (v.max ? v.playing / v.max * 100 : 0) + "%"));
-  });
-
-  $("recTxt").textContent = s.recordT ? fecha(s.recordT) : "—";
-  $("mhTxt").textContent = s.mejorHora.t ? "visitas · " + fecha(s.mejorHora.t) : "visitas en una hora";
-  $("mdTxt").textContent = s.mejorDia.t ? "visitas · " + diaNombre(s.mejorDia.t) : "visitas en un día";
-  $("mfTxt").textContent = s.mejorFav.t ? diaNombre(s.mejorFav.t) : "—";
-  const hl = $("hitos"); hl.textContent = "";
-  if (s.hito.sig) { const d = document.createElement("div"); d.className = "item"; d.innerHTML = `<span>🎯 ${fmt(s.hito.sig)} visitas</span><b>${s.hito.eta ? "en ~" + duracion(s.hito.eta) : "el próximo"}</b>`; hl.appendChild(d); }
-  [...s.hitosHechos].reverse().forEach(h => {
-    const d = document.createElement("div"); d.className = "item";
-    d.innerHTML = `<span>🏆 ${fmt(h.h)} visitas</span><b>${h.t ? fecha(h.t) : "conseguido"}</b>`;
-    hl.appendChild(d);
-  });
-
-  const J = s.juego || {};
-  $("grpTxt").textContent = s.grupoInfo ? `${s.grupoInfo.name}${s.grupoHoy ? ` · +${fmt(s.grupoHoy)} hoy` : ""}` : "—";
-  $("edadTxt").textContent = s.edad ? `${fmt(s.visits / s.edad)} visitas al día de media` : "—";
-  const avatar = {MorphToR15: "R15", MorphToR6: "R6", PlayerChoice: "Elige el jugador"}[J.universeAvatarType] || J.universeAvatarType;
-  const ficha = [
-    ["Nombre en Roblox", J.name], ["Género", J.genre_l1], ["Jugadores por servidor", J.maxPlayers], ["Tipo de avatar", avatar],
-    ["Servidores VIP", J.createVipServersAllowed == null ? null : J.createVipServersAllowed ? "Permitidos" : "No permitidos"],
-    ["Se puede copiar", J.copyingAllowed == null ? null : J.copyingAllowed ? "Sí" : "No"],
-    ["Precio de entrada", J.name ? (J.price ? J.price + " R$" : "Gratis") : null],
-    ["Última actualización", J.updated ? hace(J.updated) : null],
-    ["Creado", J.created ? new Date(J.created).toLocaleDateString("es-ES", {day: "numeric", month: "long", year: "numeric"}) : null],
-    ["Visitas totales", fmt(s.visits)], ["Favoritos totales", fmt(s.fav)],
-    ["Votos totales", s.up == null ? null : fmt(s.up + s.down)],
-  ];
-  const fl = $("ficha"); fl.textContent = "";
-  ficha.filter(f => f[1] != null && f[1] !== "").forEach(([k, v]) => { const d = document.createElement("div"); d.className = "item"; d.innerHTML = "<span></span><b></b>"; d.firstChild.textContent = k; d.lastChild.textContent = v; fl.appendChild(d); });
-  $("desc").textContent = J.description || "";
-  const imgs = s.imagenes.length ? s.imagenes : (icono ? [icono] : []);
-  const gal = $("galeria");
-  if (gal.dataset.n !== String(imgs.length)) {
-    gal.dataset.n = imgs.length; gal.textContent = "";
-    imgs.forEach(u => { const im = document.createElement("img"); im.src = u; im.alt = "Imagen del juego"; im.loading = "lazy"; gal.appendChild(im); });
-  }
-
-  const ca = $("calor"), vals = s.calor.filter(v => v != null), maxC = Math.max(1, ...vals);
-  if (!ca.children.length) for (let h = 0; h < 24; h++) { const d = document.createElement("div"); d.textContent = String(h).padStart(2, "0"); ca.appendChild(d); }
-  s.calor.forEach((v, h) => {
-    const d = ca.children[h];
-    d.title = v == null ? `${h}h: sin datos` : `${h}h: ${fmt(v, 1)} jugadores de media`;
-    if (v != null) { const k = v / maxC; d.style.background = `rgba(94,230,255,${0.08 + k * 0.75})`; d.style.color = k > 0.55 ? "#07090d" : "var(--fg)"; }
-  });
-
-  pintarTarjetas();
-  graficaJug(true);
-  graficaHoras(true);
-  comprobarAviso();
-}
-
-function pintarTarjetas() {
-  const elegidas = leer("tarjetas", POR_DEFECTO), cont = $("tarjetas");
-  if ([...cont.children].map(c => c.dataset.t).join() !== elegidas.join()) {
-    cont.textContent = "";
-    elegidas.forEach((k, i) => {
-      if (!TARJETAS[k]) return;
-      const d = document.createElement("div"); d.className = "card"; d.dataset.t = k;
-      if (!lento) d.style.animation = `entra .4s ${i * 0.05}s both`;
-      const extra = k === "like" ? ' data-suf="%"' : k === "media" || k === "porMin" ? ' data-dec="1"' : "";
-      d.innerHTML = `<div class="etq">${TARJETAS[k][0]}</div><div class="num" data-k2="${k}"${extra}>0</div><div class="sub">${TARJETAS[k][1]}</div>`;
-      cont.appendChild(d);
-    });
-  }
-  if (!S) return;
-  cont.querySelectorAll("[data-k2]").forEach(el => {
-    contar(el, S[el.dataset.k2]);
-    if (S.ayer && el.dataset.k2 === "playing") el.nextElementSibling.innerHTML = flecha(S.playing, S.ayer.playing);
-    if (S.ayer && el.dataset.k2 === "hoy") el.nextElementSibling.innerHTML = flecha(S.hoy, S.ayer.hoy);
-  });
-}
-
-let horas = 6;
-function preparar(cv) {
-  const dpr = devicePixelRatio || 1, W = cv.clientWidth, H = cv.clientHeight;
-  if (!W) return null;
-  cv.width = W * dpr; cv.height = H * dpr;
-  const c = cv.getContext("2d"); c.scale(dpr, dpr);
-  return {c, W, H};
-}
-function animarDibujo(cv, dibujar, animar) {
-  if (!animar || lento || cv._yaAnimado || !cv.clientWidth) { dibujar(1); return; }
-  cv._yaAnimado = true;
-  const t0 = performance.now();
-  const paso = t => { const u = Math.min(1, (t - t0) / 900); dibujar(1 - Math.pow(1 - u, 3)); if (u < 1) requestAnimationFrame(paso); };
-  requestAnimationFrame(paso);
-}
-
-function graficaJug(animar) {
-  if (!S) return;
-  const cv = $("cvJug"), fin = S.t, ini = fin - horas * 3600;
-  const pts = S.serie.filter(p => p[0] >= ini);
-  const L = 30, B = 20, max = Math.max(5, ...pts.map(p => p[1])) * 1.2;
-  const dibujar = prog => {
-    const P = preparar(cv); if (!P) return; const {c, W, H} = P;
-    const x = t => L + (t - ini) / (fin - ini) * (W - L - 6), y = v => (H - B) - v / max * (H - B - 6);
-    c.font = "400 10px 'IBM Plex Mono', monospace"; c.fillStyle = css("--tenue"); c.strokeStyle = css("--linea"); c.lineWidth = 1;
-    for (let i = 0; i <= 3; i++) { const v = Math.round(max / 3 * i), yy = y(v); c.beginPath(); c.moveTo(L, yy); c.lineTo(W, yy); c.stroke(); c.fillText(v, 2, yy + 3); }
-    for (let i = 0; i <= 3; i++) {
-      const t = ini + (fin - ini) * i / 3, d = new Date(t * 1000);
-      const s = horas > 48 ? d.toLocaleDateString("es-ES", {weekday: "short"}) + " " + d.getHours() + "h" : d.toLocaleTimeString("es-ES", {hour: "2-digit", minute: "2-digit"});
-      c.fillText(s, Math.min(Math.max(x(t) - 14, L), W - 46), H - 4);
-    }
-    if (pts.length < 2) { c.fillStyle = css("--sub"); c.fillText("Aún no hay datos en este rango", L + 8, H / 2); cv._mapa = null; return; }
-    const n = Math.max(2, Math.ceil(pts.length * prog)), vis = pts.slice(0, n);
-    const camino = () => { c.beginPath(); vis.forEach((p, i) => i ? c.lineTo(x(p[0]), y(p[1])) : c.moveTo(x(p[0]), y(p[1]))); };
-    const g = c.createLinearGradient(0, 0, 0, H); g.addColorStop(0, "rgba(94,230,255,.25)"); g.addColorStop(1, "rgba(94,230,255,0)");
-    camino(); c.lineTo(x(vis.at(-1)[0]), y(0)); c.lineTo(x(vis[0][0]), y(0)); c.closePath(); c.fillStyle = g; c.fill();
-    c.shadowColor = css("--acento"); c.shadowBlur = 10;
-    camino(); c.strokeStyle = css("--acento"); c.lineWidth = 2; c.lineJoin = "round"; c.stroke();
-    const lp = vis.at(-1); c.beginPath(); c.arc(x(lp[0]), y(lp[1]), 3.5, 0, 7); c.fillStyle = css("--acento"); c.fill(); c.shadowBlur = 0;
-    cv._mapa = {pts, x, y};
-  };
-  animarDibujo(cv, dibujar, animar);
-}
-
-function graficaHoras(animar) {
-  if (!S) return;
-  const cv = $("cvHoras"), datos = S.porHora, max = Math.max(5, ...datos.map(d => d[1] ?? 0)) * 1.15;
-  const dibujar = prog => {
-    const P = preparar(cv); if (!P) return; const {c, W, H} = P;
-    const L = 30, B = 20, ancho = (W - L) / datos.length, base = H - B, alto = v => v / max * (H - B - 6);
-    c.font = "400 10px 'IBM Plex Mono', monospace"; c.fillStyle = css("--tenue"); c.strokeStyle = css("--linea");
-    for (let i = 0; i <= 2; i++) { const v = Math.round(max / 2 * i), yy = base - alto(v); c.beginPath(); c.moveTo(L, yy); c.lineTo(W, yy); c.stroke(); c.fillText(v, 2, yy + 3); }
-    datos.forEach(([t, v], i) => {
-      const x = L + i * ancho + 2, w = Math.max(2, ancho - 4);
-      if (v == null) { c.fillStyle = "rgba(255,255,255,.03)"; c.fillRect(x, 6, w, base - 6); }
-      else { const h = alto(v) * prog; c.fillStyle = i === datos.length - 1 ? css("--acento") : "rgba(94,230,255,.4)"; c.beginPath(); if (c.roundRect) c.roundRect(x, base - h, w, h, 3); else c.rect(x, base - h, w, h); c.fill(); }
-      if (i % 6 === 0) { c.fillStyle = css("--tenue"); c.fillText(String(new Date(t * 1000).getHours()).padStart(2, "0") + "h", x, H - 4); }
-    });
-    cv._barras = {datos, L, ancho};
-  };
-  animarDibujo(cv, dibujar, animar);
-}
-
-function tooltip(cv, tip, buscar) {
-  const mover = e => {
-    const r = cv.getBoundingClientRect(), p = e.touches ? e.touches[0] : e;
-    const res = buscar(p.clientX - r.left); if (!res) { tip.style.opacity = 0; return; }
-    tip.textContent = res.txt; tip.style.left = Math.min(Math.max(res.x, 60), r.width - 60) + "px"; tip.style.top = res.y + "px"; tip.style.opacity = 1;
-  };
-  cv.addEventListener("pointermove", mover); cv.addEventListener("pointerdown", mover);
-  cv.addEventListener("pointerleave", () => tip.style.opacity = 0);
-  cv.addEventListener("pointerup", e => { if (e.pointerType !== "mouse") setTimeout(() => tip.style.opacity = 0, 1800); });
-}
-tooltip($("cvJug"), $("tipJug"), px => {
-  const m = $("cvJug")._mapa; if (!m) return null;
-  let mejor = null, d = 1e9; m.pts.forEach(p => { const dd = Math.abs(m.x(p[0]) - px); if (dd < d) { d = dd; mejor = p; } });
-  return mejor && {x: m.x(mejor[0]), y: m.y(mejor[1]), txt: `${mejor[1]} jugadores · ${new Date(mejor[0] * 1000).toLocaleString("es-ES", {weekday: "short", hour: "2-digit", minute: "2-digit"})}`};
-});
-tooltip($("cvHoras"), $("tipHoras"), px => {
-  const b = $("cvHoras")._barras; if (!b) return null;
-  const i = Math.floor((px - b.L) / b.ancho), d = b.datos[i]; if (!d) return null;
-  const h = new Date(d[0] * 1000).getHours();
-  return {x: b.L + i * b.ancho + b.ancho / 2, y: 24, txt: d[1] == null ? `${h}h · sin datos` : `${h}:00–${(h + 1) % 24}:00 · ${d[1]} visitas`};
-});
-
-$("rangos").addEventListener("click", e => {
-  const b = e.target.closest("button"); if (!b) return;
-  horas = +b.dataset.h;
-  $("rangos").querySelectorAll("button").forEach(x => x.setAttribute("aria-pressed", x === b));
-  $("cvJug")._yaAnimado = false; graficaJug(true);
-});
-
-function irA(v) {
-  if (!$("v-" + v)) v = "inicio";
-  document.querySelectorAll(".vista").forEach(s => s.classList.toggle("activa", s.id === "v-" + v));
-  document.querySelectorAll("#menu button").forEach(b => b.dataset.v === v ? b.setAttribute("aria-current", "page") : b.removeAttribute("aria-current"));
-  guardar("vista", v);
-  scrollTo({top: 0, behavior: lento ? "auto" : "smooth"});
-  if (S) { $("cvJug")._yaAnimado = false; $("cvHoras")._yaAnimado = false; requestAnimationFrame(() => { graficaJug(true); graficaHoras(true); }); }
-}
-$("menu").addEventListener("click", e => { const b = e.target.closest("button"); if (b) irA(b.dataset.v); });
-
-function abrirAjustes(si) { $("hoja").classList.toggle("abierta", si); $("velo").classList.toggle("abierto", si); }
-$("btnAjustes").onclick = () => abrirAjustes(true);
-$("velo").onclick = $("btnCerrar").onclick = () => abrirAjustes(false);
-
-function montarOpciones() {
-  const elegidas = leer("tarjetas", POR_DEFECTO), cont = $("opcTarjetas"); cont.textContent = "";
-  Object.entries(TARJETAS).forEach(([k, [nombre]]) => {
-    const d = document.createElement("div"); d.className = "opc";
-    d.innerHTML = `<label for="t-${k}">${nombre}</label><input type="checkbox" class="interruptor" id="t-${k}" ${elegidas.includes(k) ? "checked" : ""}>`;
-    d.querySelector("input").onchange = e => {
-      let l = leer("tarjetas", POR_DEFECTO);
-      l = e.target.checked ? [...l.filter(x => x !== k), k] : l.filter(x => x !== k);
-      guardar("tarjetas", l); pintarTarjetas();
-    };
-    cont.appendChild(d);
-  });
-}
-montarOpciones();
-$("avisoOn").checked = leer("avisoOn", false);
-$("avisoN").value = leer("avisoN", 10);
-$("vibrar").checked = leer("vibrar", true);
-$("avisoOn").onchange = async e => {
-  guardar("avisoOn", e.target.checked);
-  if (e.target.checked && "Notification" in window && Notification.permission === "default") { try { await Notification.requestPermission(); } catch {} }
-  toast(e.target.checked ? `Te aviso cuando haya ${$("avisoN").value} jugadores o más` : "Avisos desactivados");
-};
-$("avisoN").onchange = e => { const n = Math.max(1, +e.target.value || 10); e.target.value = n; guardar("avisoN", n); };
-$("vibrar").onchange = e => guardar("vibrar", e.target.checked);
-
-let yaAvisado = false;
-function comprobarAviso() {
-  if (!leer("avisoOn", false) || !S) return;
-  const n = leer("avisoN", 10);
-  if (S.playing >= n && !yaAvisado) {
-    yaAvisado = true;
-    const txt = `🔥 ${S.playing} jugando ahora en Defiende tu tropa!`;
-    toast(txt);
-    if (leer("vibrar", true) && navigator.vibrate) navigator.vibrate([120, 60, 120]);
-    try { if ("Notification" in window && Notification.permission === "granted" && document.hidden) new Notification("Defiende tu tropa!", {body: txt, icon: icono || undefined}); } catch {}
-  } else if (S.playing < n) yaAvisado = false;
-}
-
-$("btnCsv").onclick = () => {
-  if (!S) return;
-  const csv = "fecha;jugando;visitas;favoritos;me_gusta;no_me_gusta;miembros_grupo\n" + S.filas.map(f =>
-    [new Date(f.t * 1000).toLocaleString("es-ES"), f.playing, f.visits, f.fav, f.up ?? "", f.down ?? "", f.grp ?? ""].join(";")).join("\n");
-  const a = document.createElement("a");
-  a.href = URL.createObjectURL(new Blob(["﻿" + csv], {type: "text/csv"}));
-  a.download = "defiende-tu-tropa-stats.csv"; document.body.appendChild(a); a.click(); a.remove();
-  toast("Historial descargado");
-};
-
-let proxima = 0, cargandoYa = false;
-async function cargar() {
-  if (cargandoYa) return; cargandoYa = true;
-  try {
-    let directo = null;
-    if (Date.now() - robotLeido > 120000 || !robot) {
-      try { robot = await json(HIST_URL + "?t=" + Date.now()); robotLeido = Date.now(); } catch {}
-    }
-    try {
-      const g = (await json(`https://games.roproxy.com/v1/games?universeIds=${UNIVERSO}`)).data[0];
-      directo = {t: Math.floor(Date.now() / 1000), playing: g.playing, visits: g.visits, fav: g.favoritedCount};
-      if (!robot) robot = {};
-      robot.juego = Object.assign({}, robot.juego, {name: g.name, maxPlayers: g.maxPlayers, updated: g.updated, created: g.created,
-        description: g.description, genre_l1: g.genre_l1, universeAvatarType: g.universeAvatarType,
-        createVipServersAllowed: g.createVipServersAllowed, copyingAllowed: g.copyingAllowed, price: g.price});
-    } catch {}
-    if (!icono) { try { icono = (await json(`https://thumbnails.roproxy.com/v1/games/icons?universeIds=${UNIVERSO}&size=256x256&format=Png`)).data[0].imageUrl; } catch {} }
-    const filas = [...((robot && robot.filas) || [])];
-    if (directo && (!filas.length || directo.t > filas.at(-1).t)) filas.push(directo);
-    proxima = Date.now() + CADA * 1000;
-    if (!filas.length) { $("led").className = "led off"; $("act").textContent = "sin conexión · reintentando"; return; }
-    S = calcular(filas, robot);
-    $("main").classList.remove("cargando");
-    $("led").className = directo ? "led on" : "led off";
-    $("act").textContent = (directo ? "en directo · " : "último dato · ") + new Date(S.t * 1000).toLocaleTimeString("es-ES");
-    pintar();
-  } finally { cargandoYa = false; }
-}
-setInterval(() => {
-  const queda = Math.max(0, proxima - Date.now()) / (CADA * 1000);
-  $("anillo").style.strokeDashoffset = 119.4 * (1 - queda);
-  if (proxima && Date.now() >= proxima && !document.hidden) cargar();
-}, 1000);
-$("btnAct").onclick = () => { if (!lento) $("btnAct").animate([{transform: "rotate(0)"}, {transform: "rotate(360deg)"}], {duration: 600}); robotLeido = 0; cargar().then(() => toast("Actualizado")); };
-document.addEventListener("visibilitychange", () => { if (!document.hidden && Date.now() > proxima - 5000) cargar(); });
-addEventListener("resize", () => { graficaJug(false); graficaHoras(false); });
-
-pintarTarjetas();
-irA(leer("vista", "inicio"));
-cargar();
-</script>
+<script src="app.js"></script>
 </body>
 </html>
