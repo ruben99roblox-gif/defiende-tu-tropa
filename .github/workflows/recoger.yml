@@ -1,0 +1,33 @@
+name: Recoger stats
+
+on:
+  schedule:
+    - cron: "*/5 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: recoger
+  cancel-in-progress: false
+
+jobs:
+  recoger:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          ref: datos
+          path: datos
+      - name: Leer Roblox
+        run: python3 recoger.py datos/historial.json
+      - name: Guardar (sin acumular historial de git)
+        working-directory: datos
+        run: |
+          git config user.name "stats-bot"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add historial.json
+          git commit --amend -m "datos" --quiet
+          git push --force --quiet
