@@ -9,6 +9,8 @@
 //==================================================================
 const UNIVERSO = 10741812327;
 const HIST_URL = "https://raw.githubusercontent.com/ruben99roblox-gif/defiende-tu-tropa/datos/historial.json";
+// la API de GitHub da siempre la copia al dia (raw puede ir con minutos de retraso); limite 60/h por conexion
+const HIST_API = "https://api.github.com/repos/ruben99roblox-gif/defiende-tu-tropa/contents/historial.json?ref=datos";
 const HITOS = [1e3, 2.5e3, 5e3, 1e4, 2.5e4, 5e4, 1e5, 2.5e5, 5e5, 1e6, 2.5e6, 5e6, 1e7, 2.5e7, 5e7, 1e8];
 const VISTAS = ["inicio", "jugadores", "visitas", "servidores", "juego", "mas"];
 const TARJETAS = {
@@ -125,8 +127,8 @@ function confeti() {
 //==================================================================
 let robot = null, robotLeido = 0, icono = null, S = null;
 
-async function json(url) {
-  const r = await fetch(url, {cache: "no-store"});
+async function json(url, headers) {
+  const r = await fetch(url, {cache: "no-store", headers});
   if (!r.ok) throw new Error("HTTP " + r.status);
   return r.json();
 }
@@ -843,8 +845,11 @@ async function cargar() {
   if (cargandoYa) return; cargandoYa = true;
   try {
     let directo = null;
-    if (Date.now() - robotLeido > 120000 || !robot) {
-      try { robot = await json(HIST_URL + "?t=" + Date.now()); robotLeido = Date.now(); } catch {}
+    if (Date.now() - robotLeido > 240000 || !robot || !robot.filas) {
+      let nuevo = null;
+      try { nuevo = await json(HIST_API, {Accept: "application/vnd.github.raw"}); } catch {}
+      if (!nuevo) { try { nuevo = await json(HIST_URL + "?t=" + Date.now()); } catch {} }
+      if (nuevo && nuevo.filas) { robot = nuevo; robotLeido = Date.now(); }
     }
     try {
       const g = (await json(`https://games.roproxy.com/v1/games?universeIds=${UNIVERSO}`)).data[0];
