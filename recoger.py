@@ -102,12 +102,14 @@ clave_api = os.environ.get("ROBLOX_API_KEY", "").strip()
 dentro = datos.get("dentro", {})
 if clave_api:
     def leer_dia(dia):
-        url = ("https://apis.roblox.com/datastores/v1/universes/%d/standard-datastores/datastore/entries/entry"
-               "?datastoreName=DTT_Telemetria&entryKey=%s" % (UNIVERSO, urllib.parse.quote("d:" + dia)))
+        # Open Cloud v2 (permiso universe-datastores.objects:read)
+        url = ("https://apis.roblox.com/cloud/v2/universes/%d/data-stores/DTT_Telemetria/entries/%s"
+               % (UNIVERSO, urllib.parse.quote("d:" + dia, safe="")))
         req = urllib.request.Request(url, headers={"x-api-key": clave_api, "User-Agent": "dtt-stats/1.0"})
         try:
             with urllib.request.urlopen(req, timeout=20) as r:
-                return json.loads(r.read().decode("utf-8"))
+                v = json.loads(r.read().decode("utf-8")).get("value")
+                return json.loads(v) if isinstance(v, str) else v
         except urllib.error.HTTPError as e:
             if e.code == 404:
                 return None  # ese dia aun no tiene datos
