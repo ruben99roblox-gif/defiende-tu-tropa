@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Defiende tu tropa · Stats</title>
+<title>Defiende tu tropa! Stats</title>
 <meta name="theme-color" content="#07090d">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
@@ -128,7 +128,7 @@ td.parcial { color: var(--tenue) }
 <div class="envoltura">
   <header class="hud cab">
     <img id="icono" alt="" src="data:image/gif;base64,R0lGODlhAQABAAAAACw=">
-    <div class="txt"><div class="etq">Roblox · panel en directo</div><h1 id="nombre">Defiende tu tropa!</h1></div>
+    <div class="txt"><div class="etq">Roblox · panel en directo</div><h1 id="nombre">Defiende tu tropa! Stats</h1></div>
     <div class="estadoConex"><span class="led" id="led"></span><span id="act">conectando…</span></div>
   </header>
 
@@ -286,7 +286,6 @@ const flecha = (ahora, antes) => {
 };
 
 function pintar(s) {
-  $("nombre").textContent = s.juego.name || "Defiende tu tropa!";
   if (s.juego.icon && $("icono").src !== s.juego.icon) $("icono").src = s.juego.icon;
   $("visits").textContent = fmt(s.visits);
   $("vivoP").textContent = fmt(s.playing);
@@ -350,7 +349,7 @@ function pintar(s) {
 // guarda el robot de GitHub cada ~5 min (me gusta y servidores vienen de ahi).
 //==================================================================
 const UNIVERSO = 10741812327;
-const HIST_URL = "https://raw.githubusercontent.com/ruben99roblox-gif/dtt-stats/datos/historial.json";
+const HIST_URL = "https://raw.githubusercontent.com/ruben99roblox-gif/defiende-tu-tropa/datos/historial.json";
 const HITOS = [1e3, 2.5e3, 5e3, 1e4, 2.5e4, 5e4, 1e5, 2.5e5, 5e5, 1e6, 2.5e6, 5e6, 1e7];
 let robot = null, robotLeido = 0, icono = null;
 
