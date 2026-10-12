@@ -163,7 +163,7 @@ th { font-weight: 500; font-size: 10px; letter-spacing: .12em; text-transform: u
   .menu button svg { width: 16px; height: 16px }
   .grid-inicio { grid-template-columns: repeat(4, 1fr) !important }
 }
-@media (max-width: 400px) { .num { font-size: 26px } .grid3 { grid-template-columns: 1fr 1fr } .calor { grid-template-columns: repeat(8, 1fr) } }
+@media (max-width: 400px) { .num { font-size: 26px } .num.grande { font-size: 46px } .grid3 { grid-template-columns: 1fr 1fr } .calor { grid-template-columns: repeat(8, 1fr) } }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important } }
 </style>
 </head>
@@ -198,7 +198,7 @@ th { font-weight: 500; font-size: 10px; letter-spacing: .12em; text-transform: u
         <div class="chips">
           <span class="chip"><b data-k="playing">0</b> jugando</span>
           <span class="chip"><b data-k="porMin" data-dec="1">0</b> visitas/min</span>
-          <span class="chip"><b data-k="proyeccion">0</b> previstas hoy</span>
+          <span class="chip" id="chipProy" hidden><b data-k="proyeccion">0</b> previstas hoy</span>
         </div>
       </div>
       <div class="card">
@@ -484,6 +484,7 @@ function pintar() {
   document.querySelectorAll("#main [data-k]").forEach(el => contar(el, s[el.dataset.k]));
   if (icono && $("icono").dataset.ok !== "1") { $("icono").src = icono; $("icono").dataset.ok = "1"; }
 
+  $("chipProy").hidden = s.proyeccion == null;
   $("hitoA").textContent = s.hito.sig ? `${fmt(s.visits)} / ${fmt(s.hito.sig)}` : "todos conseguidos";
   $("hitoBarra").style.width = s.hitoPct + "%";
   $("hitoEta").textContent = s.hito.eta ? `faltan ${fmt(s.hito.sig - s.visits)} · ~${duracion(s.hito.eta)}` : "midiendo el ritmo…";
