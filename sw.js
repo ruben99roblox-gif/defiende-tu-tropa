@@ -1,6 +1,6 @@
 // Service worker: hace la web instalable y que abra sin internet.
 // Siempre intenta la red primero (para tener lo ultimo) y si falla usa la copia guardada.
-const CACHE = "dtt-v6";
+const CACHE = "dtt-v8";
 const BASE = ["./", "./index.html", "./app.js", "./manifest.json", "./icono-192.png", "./icono-512.png"];
 
 self.addEventListener("install", e => {

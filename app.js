@@ -12,7 +12,7 @@ const HIST_URL = "https://raw.githubusercontent.com/ruben99roblox-gif/defiende-t
 // la API de GitHub da siempre la copia al dia (raw puede ir con minutos de retraso); limite 60/h por conexion
 const HIST_API = "https://api.github.com/repos/ruben99roblox-gif/defiende-tu-tropa/contents/historial.json?ref=datos";
 const HITOS = [1e3, 2.5e3, 5e3, 1e4, 2.5e4, 5e4, 1e5, 2.5e5, 5e5, 1e6, 2.5e6, 5e6, 1e7, 2.5e7, 5e7, 1e8];
-const VISTAS = ["inicio", "jugadores", "visitas", "servidores", "juego", "mas"];
+const VISTAS = ["inicio", "jugadores", "visitas", "servidores", "juego", "dev", "mas"];
 const TARJETAS = {
   playing: ["Jugando ahora", "en todos los servidores"],
   hoy: ["Visitas hoy", "desde medianoche"],
@@ -285,6 +285,7 @@ function pintar() {
   if (icono && $("icono").dataset.ok !== "1") { $("icono").src = icono; $("icono").dataset.ok = "1"; }
   $("chipProy").hidden = s.proyeccion == null;
   pintarInicio(s); pintarJugadores(s); pintarVisitas(s); pintarServidores(s); pintarJuego(s); pintarMas(s);
+  try { pintarDev(vistaActual === "dev"); } catch (e) { console.warn("dev", e); }
   pintarTarjetas();
   graficas(true);
   avisos();
@@ -575,6 +576,7 @@ function graficas(animar) {
   if (!v || !S) return;
   if (v.id === "v-jugadores") { graficaJug(animar); graficaServ(animar); }
   if (v.id === "v-visitas") { graficaHoras(animar); graficaLike(animar); }
+  if (v.id === "v-dev") pintarDev(animar);
 }
 
 function tooltip(cv, tip, buscar) {
@@ -618,6 +620,159 @@ $("ordenServ").addEventListener("click", e => {
   if (S) pintarServidores(S);
 });
 $("buscarProd").addEventListener("input", () => { if (S) pintarJuego(S); });
+
+//==================================================================
+// DEV: datos de DENTRO del juego (modulo Telemetria -> DataStore -> robot)
+//==================================================================
+let rangoDev = 1;
+const ORDEN_DUR = [["0-1", "menos de 1 min"], ["1-5", "1–5 min"], ["5-15", "5–15 min"], ["15-30", "15–30 min"], ["30-60", "30–60 min"], ["60+", "más de 1 h"]];
+const TIPOS_ECO = {Shop: "Tienda", Gameplay: "Juego", IAP: "Robux", TimedReward: "Recompensa", Onboarding: "Tutorial", ContextualPurchase: "Compra"};
+let nombrePais = c => c;
+try { const dn = new Intl.DisplayNames(["es"], {type: "region"}); nombrePais = c => { try { return /^[A-Z]{2}$/.test(c) ? dn.of(c) : c; } catch { return c; } }; } catch {}
+const diaUTC = i => new Date(Date.now() - i * 86400000).toISOString().slice(0, 10);
+function mezclarDev(dst, src) {
+  for (const [k, v] of Object.entries(src || {})) {
+    if (v && typeof v === "object") { if (typeof dst[k] !== "object") dst[k] = {}; mezclarDev(dst[k], v); }
+    else dst[k] = (+dst[k] || 0) + (+v || 0);
+  }
+  return dst;
+}
+function barrasH(id, pares, formato = v => fmt(v)) {
+  const max = Math.max(1, ...pares.map(p => p[1])), total = pares.reduce((s, p) => s + p[1], 0) || 1;
+  $(id).innerHTML = pares.length ? pares.map(([k, v]) =>
+    `<div class="bh"><span title="${esc(k)}">${esc(k)}</span><div class="barra"><i style="width:${v / max * 100}%"></i></div><b>${formato(v, total)}</b></div>`).join("")
+    : '<div class="vacio">Sin datos en este periodo.</div>';
+}
+function embudo(cont, pasos) {
+  if (!pasos.length) { cont.innerHTML = '<div class="vacio">Sin datos en este periodo.</div>'; return; }
+  const base = pasos[0][1] || 1;
+  cont.innerHTML = pasos.map(([nombre, n], i) => {
+    const caida = i ? pasos[i - 1][1] - n : 0;
+    return `<div class="paso"><span title="${esc(nombre)}">${esc(nombre)}</span><b>${fmt(n)} · ${Math.round(n / base * 100)}%${caida > 0 ? ` <span class="caida">−${fmt(caida)}</span>` : ""}</b><div class="barra"><i style="width:${n / base * 100}%"></i></div></div>`;
+  }).join("");
+}
+const nombrePaso = k => k.replace(/^(\d+)\s*/, (m, n) => +n + ". ").replace(/_/g, " ");
+
+function barrasCanvas(cv, etiquetas, series, colores, animar, sufijo = "") {
+  const max = Math.max(1, ...etiquetas.map((_, i) => series.reduce((s, ser) => s + (ser[i] || 0), 0))) * 1.12;
+  const dibujar = prog => {
+    const P = preparar(cv); if (!P) return; const {c, W, H} = P;
+    const L = 30, B = 20, n = etiquetas.length || 1, ancho = (W - L) / n, base = H - B, alto = v => v / max * (H - B - 6);
+    c.fillStyle = css("--tenue"); c.strokeStyle = css("--linea");
+    for (let i = 0; i <= 2; i++) { const v = Math.round(max / 2 * i), yy = base - alto(v); c.beginPath(); c.moveTo(L, yy); c.lineTo(W, yy); c.stroke(); c.fillText(fmt(v, 0, false), 2, yy + 3); }
+    if (!etiquetas.length) { c.fillStyle = css("--sub"); c.fillText("Sin datos en este periodo", L + 8, H / 2); }
+    etiquetas.forEach((et, i) => {
+      let y = base; const x = L + i * ancho + 1.5, w = Math.max(2, ancho - 3);
+      series.forEach((ser, j) => { const h = alto(ser[i] || 0) * prog; if (h > 0) { c.fillStyle = colores[j]; c.fillRect(x, y - h, w, h); y -= h; } });
+      const salto = Math.ceil(n / 8);
+      if (i % salto === 0) { c.fillStyle = css("--tenue"); c.fillText(et, x, H - 4); }
+    });
+    cv._barrasG = {L, ancho, etiquetas, series, sufijo};
+  };
+  animarDibujo(cv, dibujar, animar);
+}
+const buscarBarrasG = cv => px => {
+  const b = cv._barrasG; if (!b) return null;
+  const i = Math.floor((px - b.L) / b.ancho); if (i < 0 || i >= b.etiquetas.length) return null;
+  return {x: b.L + i * b.ancho + b.ancho / 2, y: 24, txt: `${b.etiquetas[i]} · ${b.series.map(s => fmt(s[i] || 0)).join(" / ")}${b.sufijo}`};
+};
+
+function pintarDev(animar = false) {
+  const D = (robot && robot.dentro) || {}, err = robot && robot.dentroError, hayDatos = Object.keys(D).length > 0;
+  const cfg = $("devConfig");
+  if ((err === "falta_clave" || err === undefined) && !hayDatos) {
+    cfg.hidden = false;
+    cfg.innerHTML = `<div class="etq">Falta un paso para activar esta sección</div>
+      <p class="sub" style="font-size:13px">El juego ya trae el script que recoge los datos. Solo falta darle al robot permiso para leerlos:</p>
+      <ol class="pasos-config">
+        <li><b>Publica el juego</b> en Studio (Archivo → Publicar en Roblox) para que el script nuevo empiece a funcionar.</li>
+        <li>Crea una API key en <a href="https://create.roblox.com/dashboard/credentials" target="_blank" rel="noopener">create.roblox.com → Credenciales</a> → <b>Crear clave de API</b>. Nombre: <code>dtt-stats</code>. En permisos añade <b>Data Stores</b>, elige tu juego y marca solo <b>Read Entry</b> (leer entradas). En IP aceptadas pon <code>0.0.0.0/0</code>. Guarda y copia la clave.</li>
+        <li>Pégala en GitHub: abre <a href="https://github.com/ruben99roblox-gif/defiende-tu-tropa/settings/secrets/actions/new" target="_blank" rel="noopener">este enlace</a>, en <b>Name</b> escribe <code>ROBLOX_API_KEY</code>, en <b>Secret</b> pega la clave y pulsa <b>Add secret</b>.</li>
+        <li>Listo: en unos 5 minutos aparecen aquí los datos.</li>
+      </ol>
+      <div class="ayuda">La clave solo puede leer, se guarda cifrada en GitHub y nadie (ni yo) puede verla después.</div>`;
+  } else if (err) {
+    cfg.hidden = false; cfg.innerHTML = `<div class="consejo">⚠️ <span>${esc(err)}. Puedes crear otra y sustituirla en <a href="https://github.com/ruben99roblox-gif/defiende-tu-tropa/settings/secrets/actions" target="_blank" rel="noopener">los secretos del repositorio</a>.</span></div>`;
+  } else if (!hayDatos) {
+    cfg.hidden = false; cfg.innerHTML = `<div class="consejo">⏳ <span>La clave funciona, pero aún no hay datos. Asegúrate de haber <b>publicado el juego</b>; los datos aparecen en cuanto alguien juegue (se guardan cada minuto).</span></div>`;
+  } else cfg.hidden = true;
+  $("devDatos").hidden = !hayDatos;
+  if (!hayDatos) return;
+
+  const claves = rangoDev === 2 ? [diaUTC(1)] : Array.from({length: rangoDev}, (_, i) => diaUTC(i));
+  const conDatos = claves.filter(k => D[k]);
+  const A = conDatos.reduce((acc, k) => mezclarDev(acc, D[k]), {});
+  const nDias = Math.max(1, conDatos.length);
+  $("devEstado").textContent = `${rangoDev === 1 ? "Hoy" : rangoDev === 2 ? "Ayer" : `Últimos ${rangoDev} días`} (días UTC) · ${conDatos.length ? `datos de ${conDatos.length} día${conDatos.length > 1 ? "s" : ""}` : "sin datos en este periodo"}${robot.dentroT ? " · leídos " + hace(new Date(robot.dentroT * 1000)) : ""}`;
+
+  const dau = A.dau || 0, nuevos = A.nuevos || 0, rec = A.recurrentes || 0, ses = A.sesiones || 0, seg = A.segundos || 0;
+  const unaFecha = rangoDev <= 2;
+  $("dDau").textContent = fmt(unaFecha ? dau : dau / nDias, unaFecha ? 0 : 1);
+  $("dDauSub").textContent = unaFecha ? "ese día" : "de media al día";
+  $("dNuevos").textContent = fmt(nuevos);
+  $("dNuevosSub").textContent = nuevos + rec ? `${Math.round(nuevos / (nuevos + rec) * 100)}% de los que entran` : "—";
+  $("dRec").textContent = fmt(rec);
+  $("dSes").textContent = fmt(ses);
+  $("dSesSub").textContent = dau ? `${fmt(ses / dau, 1)} por jugador` : "—";
+  $("dDur").textContent = ses ? fmt(seg / ses / 60, 1) : "—";
+  $("dHoras").textContent = fmt(seg / 3600, 1);
+
+  // retencion por cohorte (ultimos 14 dias, independiente del rango)
+  const filasRet = [];
+  for (let i = 0; i < 14; i++) {
+    const k = diaUTC(i), d = D[k]; if (!d || !d.nuevos) continue;
+    const r = d.ret || {}, celda = (dias, n) => {
+      if (i < dias) return "<td>…</td>";
+      const p = Math.round((n || 0) / d.nuevos * 100), umbral = dias === 1 ? 20 : dias === 3 ? 12 : 8;
+      return `<td class="${p >= umbral ? "bueno" : "malo"}">${p}%</td>`;
+    };
+    filasRet.push(`<tr><td>${new Date(k + "T12:00:00Z").toLocaleDateString("es-ES", {weekday: "short", day: "numeric", month: "short"})}</td><td>${fmt(d.nuevos)}</td>${celda(1, r.d1)}${celda(3, r.d3)}${celda(7, r.d7)}</tr>`);
+  }
+  $("dRet").innerHTML = filasRet.join("") || '<tr><td colspan="5" class="vacio">Aún no hay jugadores nuevos registrados.</td></tr>';
+
+  // nuevos/recurrentes por dia (30 dias)
+  const ult = Array.from({length: 30}, (_, i) => diaUTC(29 - i));
+  barrasCanvas($("cvDau"), ult.map(k => new Date(k + "T12:00:00Z").getDate() + ""), [ult.map(k => (D[k] || {}).nuevos || 0), ult.map(k => (D[k] || {}).recurrentes || 0)], [css("--acento"), css("--tenue")], animar, " (nuevos / recurrentes)");
+
+  const dur = A.dur || {}, totDur = Object.values(dur).reduce((s, v) => s + v, 0);
+  barrasH("dDurBarras", ORDEN_DUR.map(([k, et]) => [et, dur[k] || 0]), v => totDur ? Math.round(v / totDur * 100) + "%" : "—");
+
+  const ordenar = obj => Object.entries(obj || {}).sort((a, b) => a[0].localeCompare(b[0], "es", {numeric: true}));
+  embudo($("dTut"), ordenar(A.tut).map(([k, v]) => [nombrePaso(k), v]));
+  const emb = A.emb || {};
+  $("dEmbudos").innerHTML = Object.keys(emb).map((nombre, i) => `<div class="card" style="margin-bottom:12px"><div class="etq">Embudo · ${esc(nombre)}</div><div class="embudo" id="dEmb${i}"></div></div>`).join("");
+  Object.keys(emb).forEach((nombre, i) => embudo($("dEmb" + i), ordenar(emb[nombre]).map(([k, v]) => [nombrePaso(k), v])));
+
+  const olas = Object.entries(A.olas || {}).map(([k, v]) => [+k, v]).sort((a, b) => a[0] - b[0]);
+  barrasCanvas($("cvOlas"), olas.map(o => "ola " + o[0]), [olas.map(o => o[1])], [css("--acento")], animar, " partidas");
+
+  const eco = A.eco || {}, nombreEco = k => { const [t, sku] = k.split("|"); return (TIPOS_ECO[t] || t) + (sku ? " · " + sku : ""); };
+  const top = (o, n = 8) => Object.entries(o || {}).sort((a, b) => b[1] - a[1]).slice(0, n).map(([k, v]) => [nombreEco(k), v]);
+  barrasH("dEcoIn", top(eco.in));
+  barrasH("dEcoOut", top(eco.out));
+
+  const ev = Object.entries(A.ev || {}).sort((a, b) => (b[1].n || 0) - (a[1].n || 0));
+  $("dEventos").innerHTML = ev.length ? ev.map(([k, v]) => `<tr><td>${esc(k)}</td><td>${fmt(v.n)}</td><td>${v.v != null && v.n ? fmt(v.v / v.n, 1) : "—"}</td></tr>`).join("") : '<tr><td colspan="3" class="vacio">Sin eventos en este periodo.</td></tr>';
+
+  const disp = A.disp || {}, totD = Object.values(disp).reduce((s, v) => s + v, 0);
+  barrasH("dDisp", Object.entries(disp).sort((a, b) => b[1] - a[1]), v => totD ? Math.round(v / totD * 100) + "%" : "—");
+  const pais = A.pais || {}, totP = Object.values(pais).reduce((s, v) => s + v, 0);
+  barrasH("dPais", Object.entries(pais).sort((a, b) => b[1] - a[1]).slice(0, 10).map(([k, v]) => [nombrePais(k), v]), v => totP ? Math.round(v / totP * 100) + "%" : "—");
+
+  const desfase = -new Date().getTimezoneOffset() / 60, horasEnt = Array(24).fill(0);
+  Object.entries(A.hora || {}).forEach(([h, v]) => { horasEnt[((+h + desfase) % 24 + 24) % 24] += v; });
+  barrasCanvas($("cvHoraEnt"), horasEnt.map((_, h) => String(h).padStart(2, "0") + "h"), [horasEnt], [css("--acento")], animar, " entradas");
+}
+$("rangoDev").addEventListener("click", e => {
+  const b = e.target.closest("button"); if (!b) return;
+  rangoDev = +b.dataset.d;
+  $("rangoDev").querySelectorAll("button").forEach(x => x.setAttribute("aria-pressed", x === b));
+  ["cvDau", "cvOlas", "cvHoraEnt"].forEach(id => $(id)._yaAnimado = false);
+  pintarDev(true);
+});
+tooltip($("cvDau"), $("tipDau"), buscarBarrasG($("cvDau")));
+tooltip($("cvOlas"), $("tipOlas"), buscarBarrasG($("cvOlas")));
+tooltip($("cvHoraEnt"), $("tipHoraEnt"), buscarBarrasG($("cvHoraEnt")));
 
 //==================================================================
 // NOTAS Y BUSCAR EN EL HISTORIAL

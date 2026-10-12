@@ -67,7 +67,7 @@ a { color: var(--acento) }
 .tirar svg { width: 18px; height: 18px; transition: transform .2s }
 
 .menu { position: fixed; left: 0; right: 0; bottom: 0; z-index: 10; display: flex; justify-content: center; gap: 2px; padding: 8px 8px calc(8px + env(safe-area-inset-bottom, 0px)); background: color-mix(in srgb, var(--bg) 90%, transparent); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); border-top: 1px solid var(--linea) }
-.menu button { flex: 1; max-width: 110px; border: 0; background: none; cursor: pointer; padding: 6px 2px; display: grid; justify-items: center; gap: 3px; color: var(--tenue); font: 500 10px var(--mono); border-radius: 12px; transition: color .2s, background .2s }
+.menu button { flex: 1; max-width: 100px; min-width: 0; border: 0; background: none; cursor: pointer; padding: 6px 2px; display: grid; justify-items: center; gap: 3px; color: var(--tenue); font: 500 10px var(--mono); border-radius: 12px; transition: color .2s, background .2s }
 .menu button svg { width: 21px; height: 21px; transition: transform .25s }
 .menu button[aria-current="page"] { color: var(--acento); background: var(--acento-s) }
 .menu button[aria-current="page"] svg { transform: translateY(-2px) }
@@ -195,6 +195,25 @@ th { font-weight: 500; font-size: 10px; letter-spacing: .12em; text-transform: u
 #confeti { position: fixed; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 40 }
 .pie { text-align: center; color: var(--tenue); font: 400 11px var(--mono); padding: 8px 0 }
 
+/* seccion Dev */
+.embudo { display: grid; gap: 8px; margin-top: 12px }
+.paso { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px 10px; font-size: 12px }
+.paso span { color: var(--sub); overflow: hidden; text-overflow: ellipsis; white-space: nowrap }
+.paso b { font: 500 12px var(--mono); text-align: right; white-space: nowrap }
+.paso .barra { grid-column: 1 / -1; height: 10px }
+.paso .caida { color: var(--mal); font-weight: 400 }
+.barrash { display: grid; gap: 6px; margin-top: 10px }
+.bh { display: grid; grid-template-columns: 84px minmax(0, 1fr) 70px; gap: 10px; align-items: center; font: 400 12px var(--mono); color: var(--sub) }
+.bh span:first-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap }
+.bh b { font-weight: 500; color: var(--fg); text-align: right }
+.bh .barra { height: 8px }
+.pasos-config { margin: 10px 0 0; padding-left: 20px; display: grid; gap: 8px; font-size: 13px }
+.pasos-config code { font-family: var(--mono); background: var(--card2); padding: 1px 6px; border-radius: 6px; font-size: 12px }
+.ret td.bueno { color: var(--bien) } .ret td.malo { color: var(--mal) }
+.ayuda { color: var(--tenue); font-size: 12px; margin-top: 8px }
+@media (max-width: 600px) { #v-dev .grid2 { grid-template-columns: 1fr } }
+@media (max-width: 430px) { .menu { gap: 0; padding-left: 4px; padding-right: 4px } .menu button { font-size: 9px; letter-spacing: -.02em; overflow: hidden } .menu button svg { width: 19px; height: 19px } }
+
 /* modo TV */
 body.tv .menu, body.tv .top .icono-btn, body.tv .vista:not(#v-inicio), body.tv #v-inicio > :not(.hero):not(#tarjetas), body.tv .pie { display: none !important }
 body.tv #v-inicio { display: grid !important }
@@ -237,6 +256,7 @@ body.tv .salir-tv { display: block; position: fixed; right: 16px; bottom: 16px; 
     <button data-v="visitas"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l5-6 4 4 8-9"/><path d="M15 6h5v5"/></svg>Visitas</button>
     <button data-v="servidores"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="6" rx="2"/><rect x="3" y="14" width="18" height="6" rx="2"/><path d="M7 7h.01M7 17h.01"/></svg>Servers</button>
     <button data-v="juego"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="7" width="18" height="11" rx="4"/><path d="M8 11v3M6.5 12.5h3M15 12h.01M17.5 13.5h.01"/></svg>Juego</button>
+    <button data-v="dev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 7l-5 5 5 5M16 7l5 5-5 5M14 4l-4 16"/></svg>Dev</button>
     <button data-v="mas"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M7 4h10v5a5 5 0 0 1-10 0zM7 6H4v2a3 3 0 0 0 3 3M17 6h3v2a3 3 0 0 1-3 3M9 20h6M12 14v6"/></svg>Más</button>
   </nav>
 
@@ -428,6 +448,62 @@ body.tv .salir-tv { display: block; position: fixed; right: 16px; bottom: 16px; 
       </div>
     </section>
 
+    <!-- ============ DEV (datos de dentro del juego) ============ -->
+    <section class="vista" id="v-dev">
+      <div class="fila"><h2 class="titulo">Dev</h2>
+        <div class="tabs" id="rangoDev"><button data-d="1" aria-pressed="true">Hoy</button><button data-d="2">Ayer</button><button data-d="7">7 días</button><button data-d="30">30 días</button></div>
+      </div>
+      <div class="card" id="devConfig" hidden></div>
+      <div id="devDatos">
+        <div class="sub" id="devEstado" style="margin:0 0 4px">—</div>
+        <div class="grid3">
+          <div class="card"><div class="etq">Jugadores únicos</div><div class="num" id="dDau">—</div><div class="sub" id="dDauSub">por día</div></div>
+          <div class="card"><div class="etq">Nuevos</div><div class="num" id="dNuevos">—</div><div class="sub" id="dNuevosSub">—</div></div>
+          <div class="card"><div class="etq">Recurrentes</div><div class="num" id="dRec">—</div><div class="sub">que ya habían jugado</div></div>
+          <div class="card"><div class="etq">Sesiones</div><div class="num" id="dSes">—</div><div class="sub" id="dSesSub">—</div></div>
+          <div class="card"><div class="etq">Sesión media real</div><div class="num" id="dDur">—</div><div class="sub">minutos</div></div>
+          <div class="card"><div class="etq">Tiempo total jugado</div><div class="num" id="dHoras">—</div><div class="sub">horas</div></div>
+        </div>
+        <div class="card">
+          <div class="etq">Retención por cohorte</div>
+          <div class="sub">De los jugadores nuevos de cada día, cuántos volvieron 1, 3 y 7 días después.</div>
+          <div class="scroll"><table class="ret"><thead><tr><th>Primer día</th><th>Nuevos</th><th>D1</th><th>D3</th><th>D7</th></tr></thead><tbody id="dRet"></tbody></table></div>
+          <div class="ayuda">Referencia en Roblox: D1 ≥ 20% está bien, ≥ 30% es muy bueno. D7 ≥ 8% está bien.</div>
+        </div>
+        <div class="card">
+          <div class="etq">Nuevos y recurrentes por día</div>
+          <div class="lienzo"><canvas id="cvDau" class="bajo"></canvas><div class="tip" id="tipDau"></div></div>
+          <div class="leyenda"><span><i style="background:var(--acento)"></i>nuevos</span><span><i style="background:var(--tenue)"></i>recurrentes</span></div>
+        </div>
+        <div class="card"><div class="etq">Cuánto dura cada sesión</div><div class="barrash" id="dDurBarras"></div></div>
+        <div class="card">
+          <div class="etq">Tutorial</div>
+          <div class="sub">Cuántos jugadores llegan a cada paso y dónde se van.</div>
+          <div class="embudo" id="dTut"></div>
+        </div>
+        <div id="dEmbudos"></div>
+        <div class="card">
+          <div class="etq">En qué oleada termina cada partida</div>
+          <div class="sub">Dónde pierden o lo dejan (evento FightEnded).</div>
+          <div class="lienzo"><canvas id="cvOlas" class="bajo"></canvas><div class="tip" id="tipOlas"></div></div>
+        </div>
+        <div class="grid2">
+          <div class="card"><div class="etq">Cash: de dónde sale</div><div class="barrash" id="dEcoIn"></div></div>
+          <div class="card"><div class="etq">Cash: en qué se gasta</div><div class="barrash" id="dEcoOut"></div></div>
+        </div>
+        <div class="card"><div class="etq">Eventos del juego</div><div class="scroll"><table><thead><tr><th>Evento</th><th>Veces</th><th>Valor medio</th></tr></thead><tbody id="dEventos"></tbody></table></div></div>
+        <div class="grid2">
+          <div class="card"><div class="etq">Dispositivos</div><div class="barrash" id="dDisp"></div></div>
+          <div class="card"><div class="etq">Países</div><div class="barrash" id="dPais"></div></div>
+        </div>
+        <div class="card">
+          <div class="etq">A qué hora entran</div>
+          <div class="sub">Entradas por hora (tu hora local).</div>
+          <div class="lienzo"><canvas id="cvHoraEnt" class="bajo"></canvas><div class="tip" id="tipHoraEnt"></div></div>
+        </div>
+      </div>
+    </section>
+
     <!-- ============ MAS ============ -->
     <section class="vista" id="v-mas">
       <h2 class="titulo">Más</h2>
@@ -502,6 +578,6 @@ body.tv .salir-tv { display: block; position: fixed; right: 16px; bottom: 16px; 
   <button class="boton principal" id="btnCerrar">Listo</button>
 </aside>
 <div class="toast" id="toast" role="status"></div>
-<script src="app.js?v=6"></script>
+<script src="app.js?v=8"></script>
 </body>
 </html>

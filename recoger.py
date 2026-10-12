@@ -1,7 +1,7 @@
 """Robot de GitHub Actions: cada ~5 min guarda una lectura del juego en historial.json
 (rama 'datos'). La web la lee para graficas, comparativas, records, servidores, tienda...
 Lo que apenas cambia (tienda, grupo, competencia, lugares) se pide una vez por hora."""
-import json, sys, time, urllib.request
+import json, os, sys, time, urllib.error, urllib.parse, urllib.request
 
 UNIVERSO = 10741812327
 GUARDAR = 30 * 86400  # 30 dias de historial
@@ -96,6 +96,44 @@ if cada_hora or not lento:
                           "followers": intentar(lambda: get(f"https://friends.roblox.com/v1/users/{dueno['userId']}/followers/count")["count"])}
     datos["lentoT"] = ahora
 
+# datos de DENTRO del juego (modulo Telemetria) via Open Cloud. Solo si hay API key
+# (secreto ROBLOX_API_KEY del repositorio: permiso de lectura de DataStores de este juego).
+clave_api = os.environ.get("ROBLOX_API_KEY", "").strip()
+dentro = datos.get("dentro", {})
+if clave_api:
+    def leer_dia(dia):
+        url = ("https://apis.roblox.com/datastores/v1/universes/%d/standard-datastores/datastore/entries/entry"
+               "?datastoreName=DTT_Telemetria&entryKey=%s" % (UNIVERSO, urllib.parse.quote("d:" + dia)))
+        req = urllib.request.Request(url, headers={"x-api-key": clave_api, "User-Agent": "dtt-stats/1.0"})
+        try:
+            with urllib.request.urlopen(req, timeout=20) as r:
+                return json.loads(r.read().decode("utf-8"))
+        except urllib.error.HTTPError as e:
+            if e.code == 404:
+                return None  # ese dia aun no tiene datos
+            raise
+    # hoy y la semana anterior en cada vuelta (la retencion de una cohorte cambia hasta 7 dias
+    # despues); el mes entero una vez por hora
+    n = 31 if cada_hora else 9
+    errores_api = 0
+    for i in range(n):
+        dia = time.strftime("%Y-%m-%d", time.gmtime(ahora - i * 86400))
+        try:
+            v_dia = leer_dia(dia)
+            if v_dia is not None:
+                dentro[dia] = v_dia
+        except Exception as e:
+            errores_api += 1
+            print("aviso telemetria:", dia, e)
+            if errores_api >= 2:
+                break
+    corte = time.strftime("%Y-%m-%d", time.gmtime(ahora - 45 * 86400))
+    dentro = {k: v for k, v in dentro.items() if k >= corte}
+    datos["dentroT"] = ahora if errores_api == 0 else datos.get("dentroT")
+    datos["dentroError"] = None if errores_api == 0 else "La API key no funciona (revisa permisos o que no haya caducado)"
+else:
+    datos["dentroError"] = "falta_clave"
+
 fila = {"t": ahora, "playing": g["playing"], "visits": g["visits"], "fav": g["favoritedCount"],
         "up": v["upVotes"], "down": v["downVotes"], "srv": len(servidores)}
 if grupo:
@@ -113,6 +151,7 @@ datos.update({
     "similares": similares,
     "lento": lento,
     "imagenes": lento.get("imagenes", []),
+    "dentro": dentro,
     "grupo": {"name": grupo.get("name"), "members": grupo.get("memberCount"), "id": grupo.get("id")} if grupo else None,
     "juego": {k: g.get(k) for k in ("name", "rootPlaceId", "description", "created", "updated", "maxPlayers",
                                      "genre_l1", "universeAvatarType", "createVipServersAllowed", "copyingAllowed",
